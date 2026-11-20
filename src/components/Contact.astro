@@ -153,8 +153,13 @@ const mailto = `mailto:${site.email}?subject=${encodeURIComponent("Проект"
   }
 
   .contact-links a {
+    padding-block: 6px;
     color: oklch(0.78 0.01 86);
     transition: color 160ms var(--ease);
+  }
+
+  .contact a:focus-visible {
+    outline-color: var(--paper);
   }
 
   .contact-links a:hover {
