@@ -1,0 +1,183 @@
+---
+import { site } from "../data/site";
+
+const mailto = `mailto:${site.email}?subject=${encodeURIComponent("Проект")}`;
+---
+
+<section id="contact" class="contact">
+  <div class="wrap">
+    <div class="contact-grid">
+      <div class="contact-main reveal">
+        <h2>
+          Расскажите<br />
+          <em>о задаче.</em>
+        </h2>
+        <p class="contact-lede">
+          Опишите в двух-трёх предложениях, что нужно сделать. Отвечу, подхожу ли
+          я и что будет на первом шаге.
+        </p>
+        <a class="contact-mail" href={mailto}>
+          {site.email}
+          <span aria-hidden="true">↗</span>
+        </a>
+        <p class="contact-note">Без анкет и брифов на сорок страниц.</p>
+      </div>
+
+      <aside class="contact-aside reveal">
+        <p class="contact-label mono-sm">Что помогает начать</p>
+        <ul class="contact-list">
+          <li>Задача в одном абзаце</li>
+          <li>Сроки и бюджетный ориентир</li>
+          <li>Ссылки на текущее, если есть</li>
+        </ul>
+
+        <div class="contact-links">
+          <a href={site.github} target="_blank" rel="noopener noreferrer">
+            GitHub <span aria-hidden="true">↗</span>
+          </a>
+          {site.telegram && (
+            <a href={site.telegram} target="_blank" rel="noopener noreferrer">
+              Telegram <span aria-hidden="true">↗</span>
+            </a>
+          )}
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact {
+    padding-block: clamp(64px, 9vw, 124px);
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
+    gap: clamp(40px, 7vw, 100px);
+    align-items: end;
+  }
+
+  .contact h2 {
+    font-family: var(--serif);
+    font-size: clamp(48px, 7vw, 96px);
+    line-height: 0.94;
+    letter-spacing: -0.05em;
+    font-weight: 500;
+  }
+
+  .contact h2 em {
+    font-style: italic;
+    font-weight: 460;
+  }
+
+  .contact-lede {
+    max-width: 44ch;
+    margin-top: 28px;
+    color: oklch(0.8 0.01 86);
+    font-size: 17px;
+    line-height: 1.5;
+  }
+
+  .contact-mail {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 34px;
+    color: var(--paper);
+    font-family: var(--serif);
+    font-size: clamp(24px, 3.2vw, 42px);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
+    text-decoration-color: oklch(0.46 0.012 75);
+    transition: color 180ms var(--ease), text-decoration-color 180ms var(--ease);
+  }
+
+  .contact-mail span {
+    display: inline-block;
+    transition: transform 220ms var(--ease);
+  }
+
+  .contact-mail:hover {
+    color: oklch(0.75 0.18 35);
+    text-decoration-color: currentColor;
+  }
+
+  .contact-mail:hover span {
+    transform: translate(3px, -3px);
+  }
+
+  .contact-note {
+    margin-top: 16px;
+    color: oklch(0.66 0.01 82);
+    font-size: 13px;
+  }
+
+  .contact-aside {
+    padding-top: 22px;
+    border-top: 1px solid oklch(0.33 0.012 75);
+  }
+
+  .contact-label {
+    color: oklch(0.63 0.01 82);
+  }
+
+  .contact-list {
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid oklch(0.33 0.012 75);
+  }
+
+  .contact-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid oklch(0.33 0.012 75);
+    color: oklch(0.84 0.008 86);
+    font-size: 15px;
+  }
+
+  .contact-links {
+    display: flex;
+    gap: 20px;
+    margin-top: 22px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .contact-links a {
+    color: oklch(0.78 0.01 86);
+    transition: color 160ms var(--ease);
+  }
+
+  .contact-links a:hover {
+    color: oklch(0.78 0.18 35);
+  }
+
+  @media (max-width: 900px) {
+    .contact-grid {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+    .contact-aside {
+      max-width: 420px;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .contact h2 {
+      font-size: 46px;
+    }
+    .contact-mail {
+      font-size: 22px;
+      word-break: break-word;
+    }
+  }
+</style>

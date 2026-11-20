@@ -1,0 +1,110 @@
+---
+import { site } from "../data/site";
+
+const base = import.meta.env.BASE_URL;
+---
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href={base} aria-label={`${site.name} — на главную`}>
+      <span class="brand-name">{site.shortName}</span>
+      <span class="brand-slash" aria-hidden="true">/</span>
+      <span class="brand-role">{site.role}</span>
+    </a>
+
+    <span class="header-edition mono-sm" aria-hidden="true">Портфолио / {site.year}</span>
+
+    <nav class="header-links" aria-label="Внешние ссылки">
+      <a href={site.github} target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+      <a href={`mailto:${site.email}`}>Email <span aria-hidden="true">↗</span></a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .header-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    gap: 24px;
+    min-height: 64px;
+    padding-block: 18px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    justify-self: start;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .brand-name {
+    color: var(--ink);
+  }
+
+  .brand-slash {
+    color: var(--signal);
+  }
+
+  .brand-role {
+    color: var(--muted);
+  }
+
+  .header-edition {
+    color: var(--faint);
+    white-space: nowrap;
+  }
+
+  .header-links {
+    display: flex;
+    justify-self: end;
+    gap: 22px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .header-links a {
+    color: var(--muted);
+    transition: color 160ms var(--ease);
+  }
+
+  .header-links a:hover {
+    color: var(--signal-text);
+  }
+
+  @media (max-width: 860px) {
+    .header-inner {
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+    }
+    .header-edition {
+      display: none;
+    }
+    .brand-role {
+      display: none;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .header-links {
+      gap: 14px;
+      font-size: 11px;
+    }
+  }
+</style>

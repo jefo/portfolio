@@ -1,0 +1,265 @@
+---
+import { getCollection } from "astro:content";
+import ProjectCard from "./ProjectCard.astro";
+
+const projects = (await getCollection("projects", ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const filters = [
+  { id: "all", label: "Все" },
+  { id: "bot", label: "Боты" },
+  { id: "engine", label: "Движки" },
+  { id: "domain", label: "Домен" },
+];
+
+const counts = projects.reduce(
+  (acc, project) => {
+    acc[project.data.category] += 1;
+    return acc;
+  },
+  { bot: 0, engine: 0, domain: 0 } as Record<string, number>,
+);
+---
+
+<section id="projects" class="section">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Проекты</h2>
+      <p class="section-note">
+        {projects.length} публичных репозитория.<br />
+        У каждого — код и разбор.
+      </p>
+    </div>
+
+    <div class="projects-intro reveal">
+      <p>
+        Боты, два движка и доменное ядро. В карточках — только то, что можно
+        проверить в исходниках: сценарий, стек, тесты и границы.
+      </p>
+      <div class="filter-bar" role="group" aria-label="Фильтр проектов">
+        {filters.map((filter, index) => (
+          <button
+            type="button"
+            class="filter"
+            data-filter={filter.id}
+            aria-pressed={index === 0 ? "true" : "false"}
+          >
+            {filter.id === "all"
+              ? `${filter.label} ${projects.length}`
+              : `${filter.label} ${counts[filter.id]}`}
+          </button>
+        ))}
+        <span class="filter-count" aria-live="polite">
+          <span data-count>{projects.length}</span> / {projects.length}
+        </span>
+      </div>
+    </div>
+
+    <div class="projects-grid reveal" data-projects-grid>
+      {projects.map((project, index) => (
+        <ProjectCard project={project} index={index} featured={project.data.featured} />
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[data-filter]"),
+  );
+  const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-project]"));
+  const grid = document.querySelector<HTMLElement>("[data-projects-grid]");
+  const count = document.querySelector<HTMLElement>("[data-count]");
+
+  function applyFilter(filter: string) {
+    let visible = 0;
+
+    for (const button of buttons) {
+      button.setAttribute("aria-pressed", String(button.dataset.filter === filter));
+    }
+
+    for (const card of cards) {
+      const show = filter === "all" || card.dataset.category === filter;
+      card.hidden = !show;
+      if (show) {
+        visible += 1;
+        card.classList.add("is-in");
+      }
+    }
+
+    if (count) count.textContent = String(visible);
+    if (grid) grid.dataset.filtered = String(filter !== "all");
+  }
+
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      applyFilter(button.dataset.filter ?? "all");
+    });
+  }
+</script>
+
+<style>
+  .projects-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px 40px;
+    align-items: end;
+    margin-bottom: 28px;
+  }
+
+  .projects-intro > p {
+    max-width: 58ch;
+    color: var(--muted);
+    font-size: 16.5px;
+    line-height: 1.5;
+  }
+
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 18px;
+    justify-content: flex-end;
+  }
+
+  .filter {
+    position: relative;
+    padding: 6px 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: transparent;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--faint);
+    cursor: pointer;
+    transition: color 160ms var(--ease), border-color 160ms var(--ease);
+  }
+
+  .filter:hover {
+    color: var(--ink);
+  }
+
+  .filter[aria-pressed="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--signal);
+  }
+
+  .filter-count {
+    padding-left: 10px;
+    border-left: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+
+  .projects-grid > :global(.project-card) {
+    min-width: 0;
+  }
+
+  .projects-grid[data-filtered="true"] {
+    grid-template-columns: 1fr;
+  }
+
+  .projects-grid[data-filtered="true"] > :global(.project-card),
+  .projects-grid[data-filtered="true"] > :global(.featured) {
+    grid-column: span 1;
+  }
+
+  .projects-grid[data-filtered="true"] > :global(.project-card) :global(.project-main) {
+    display: grid;
+    grid-template-columns: 1.08fr 0.92fr;
+  }
+
+  .projects-grid[data-filtered="true"] > :global(.project-card) :global(.cover) {
+    aspect-ratio: auto;
+    min-height: 340px;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+  }
+
+  .projects-grid[data-filtered="true"] > :global(.project-card) :global(.project-body) {
+    justify-content: center;
+    padding: 32px;
+  }
+
+  .projects-grid[data-filtered="true"] > :global(.project-card) :global(.project-title) {
+    font-size: clamp(34px, 4vw, 52px);
+  }
+
+  .projects-grid[data-filtered="true"] > :global(.project-card) :global(.project-summary) {
+    font-size: 16.5px;
+    max-width: 42ch;
+  }
+
+  .projects-grid[data-filtered="true"] > :global(.project-card) :global(.project-stack) {
+    margin: 28px 0 0;
+  }
+
+  @media (max-width: 900px) {
+    .projects-intro {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+    .filter-bar {
+      justify-content: flex-start;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .projects-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .projects-grid[data-filtered="true"] > :global(.project-card) :global(.project-main) {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .projects-grid[data-filtered="true"] > :global(.project-card) :global(.cover) {
+      aspect-ratio: 16 / 10;
+      min-height: 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .projects-grid[data-filtered="true"] > :global(.project-card) :global(.project-body) {
+      justify-content: flex-start;
+      padding: 22px 24px 26px;
+    }
+
+    .projects-grid[data-filtered="true"] > :global(.project-card) :global(.project-title) {
+      font-size: 30px;
+    }
+
+    .projects-grid[data-filtered="true"] > :global(.project-card) :global(.project-stack) {
+      margin: auto 0 0;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .filter-bar {
+      gap: 2px 14px;
+    }
+    .filter-count {
+      width: 100%;
+      padding: 8px 0 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+  }
+</style>

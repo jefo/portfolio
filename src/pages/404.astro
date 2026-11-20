@@ -1,0 +1,64 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title="404 — Евгений Кайзин" description="Страница не найдена.">
+  <Header />
+  <main id="main" class="missing">
+    <div class="wrap missing-grid">
+      <p class="mono missing-code">404 / not found</p>
+      <h1>Такой страницы нет.</h1>
+      <p class="missing-text">
+        Возможно, ссылка устарела. Вернитесь к портфолио или откройте проекты.
+      </p>
+      <div class="missing-links">
+        <a class="text-link" href={base}>На главную</a>
+        <a class="text-link" href={`${base}#projects`}>Проекты</a>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<style>
+  .missing {
+    min-height: calc(100vh - 64px - 87px);
+    display: flex;
+    align-items: center;
+    padding-block: 80px;
+  }
+
+  .missing-grid {
+    max-width: 760px;
+  }
+
+  .missing-code {
+    margin-bottom: 24px;
+    color: var(--signal-text);
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(48px, 8vw, 108px);
+    line-height: 0.94;
+    letter-spacing: -0.05em;
+    font-weight: 500;
+  }
+
+  .missing-text {
+    max-width: 42ch;
+    margin-top: 24px;
+    color: var(--muted);
+    font-size: 17px;
+  }
+
+  .missing-links {
+    display: flex;
+    gap: 24px;
+    margin-top: 34px;
+  }
+</style>

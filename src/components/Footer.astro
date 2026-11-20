@@ -1,0 +1,68 @@
+---
+import { site } from "../data/site";
+---
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <p class="footer-copy">© {site.year} {site.name}</p>
+    <p class="footer-tech">Astro + Tailwind · без аналитики и трекеров</p>
+    <div class="footer-links">
+      <a href={site.github} target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+      <a href={`mailto:${site.email}`}>Email <span aria-hidden="true">↗</span></a>
+      <a href="#main">Наверх <span aria-hidden="true">↑</span></a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding-block: 26px;
+    border-top: 1px solid var(--line);
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    gap: 16px 32px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .footer-tech {
+    text-align: center;
+  }
+
+  .footer-links {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+
+  .footer-links a {
+    color: var(--muted);
+    transition: color 160ms var(--ease);
+  }
+
+  .footer-links a:hover {
+    color: var(--signal-text);
+  }
+
+  @media (max-width: 760px) {
+    .footer-inner {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .footer-tech {
+      text-align: left;
+    }
+    .footer-links {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+  }
+</style>

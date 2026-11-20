@@ -1,0 +1,167 @@
+---
+import { facts } from "../data/site";
+---
+
+<section id="about" class="section">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Кто я</h2>
+      <p class="section-note">Независимый разработчик.<br />Не агентство.</p>
+    </div>
+
+    <div class="about-grid">
+      <p class="about-lead reveal">
+        Я — <em>Женя</em>, независимый разработчик. Собираю ботов и внутренние
+        инструменты целиком: сценарий, интерфейс, код, тесты, деплой.
+      </p>
+
+      <div class="about-copy reveal">
+        <p>
+          Мне интересны задачи, где нужно разобраться в процессе, а не просто
+          накидать обработчиков. Кто принимает решение, какие данные нужны, где
+          человек ошибается — это и есть архитектура бота.
+        </p>
+        <p>
+          Поэтому в проектах есть состояния, схемы и тесты. Не потому что «так
+          принято», а потому что иначе через месяц нельзя понять, почему диалог
+          повёл себя странно.
+        </p>
+        <p>
+          Работаю с TypeScript, Bun, Node, Zod, Postgres и Redis. Интерфейсы —
+          Astro. AI — через LLM API, с проверками и ограничениями.
+        </p>
+      </div>
+    </div>
+
+    <dl class="facts reveal">
+      {facts.map((fact) => (
+        <div class="fact">
+          <dt>{fact.label}</dt>
+          <dd>{fact.value}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>
+
+<style>
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 28px 32px;
+  }
+
+  .about-lead {
+    grid-column: 1 / 8;
+    font-family: var(--serif);
+    font-size: clamp(27px, 3.4vw, 44px);
+    line-height: 1.1;
+    letter-spacing: -0.038em;
+    font-weight: 480;
+    text-wrap: balance;
+  }
+
+  .about-lead em {
+    font-style: italic;
+  }
+
+  .about-copy {
+    grid-column: 9 / 13;
+    display: grid;
+    gap: 16px;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.52;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: clamp(48px, 6vw, 84px);
+    border-top: 1px solid var(--line);
+  }
+
+  .fact {
+    padding: 16px 20px 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .fact:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .fact dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .fact dd {
+    margin-top: 6px;
+    font-family: var(--serif);
+    font-size: clamp(20px, 2vw, 26px);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+  }
+
+  @media (max-width: 1000px) {
+    .about-lead {
+      grid-column: 1 / 8;
+    }
+    .about-copy {
+      grid-column: 9 / 13;
+    }
+  }
+
+  @media (max-width: 820px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+    .about-lead,
+    .about-copy {
+      grid-column: 1;
+    }
+    .facts {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+    }
+    .fact:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+    .fact:nth-child(n + 3) {
+      margin-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 520px) {
+    .facts {
+      grid-template-columns: 1fr;
+    }
+    .fact {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 0;
+      padding: 12px 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+    .fact:first-child {
+      border-top: 0;
+    }
+    .fact:nth-child(n + 3) {
+      margin-top: 0;
+    }
+    .fact dd {
+      margin: 0;
+      text-align: right;
+    }
+  }
+</style>
