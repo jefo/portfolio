@@ -28,6 +28,8 @@ bun run preview
 
 Сборка кладётся в `docs/` и коммитится: GitHub Pages отдаёт её из ветки `master`, папка `/docs`.
 
+> Pages у репозитория нужно включить один раз: **Settings → Pages → Deploy from a branch → `master` / `/docs`**. До этого `https://jefo.github.io/portfolio/` отвечает 404.
+
 ## Структура
 
 ```text
