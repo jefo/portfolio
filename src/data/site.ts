@@ -65,7 +65,7 @@ export const process = [
 
 export const facts = [
   { label: "Публичные проекты", value: "11" },
-  { label: "Тесты", value: "190+" },
+  { label: "Тесты", value: "192" },
   { label: "Основной стек", value: "TypeScript / Bun" },
   { label: "Формат", value: "Remote" },
 ];
