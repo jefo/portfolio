@@ -62,8 +62,11 @@ const categoryLabel = data.category === "bot" ? "Бот" : data.category === "en
   <div class="project-foot">
     <span>{data.tests ?? data.status}</span>
     <div class="project-links">
-      <a href={data.repo} target="_blank" rel="noopener noreferrer">код <span aria-hidden="true">↗</span></a>
-      <a href={data.caseUrl}>разбор <span aria-hidden="true">↗</span></a>
+      {data.repo && (
+        <a href={data.repo} target="_blank" rel="noopener noreferrer">код <span aria-hidden="true">↗</span></a>
+      )}
+      {data.caseUrl && <a href={data.caseUrl}>разбор <span aria-hidden="true">↗</span></a>}
+      {!data.repo && !data.caseUrl && <span class="project-closed">код закрыт</span>}
     </div>
   </div>
 </article>
@@ -300,6 +303,12 @@ const categoryLabel = data.category === "bot" ? "Бот" : data.category === "en
 
   .project-links a:hover {
     color: var(--signal-text);
+  }
+
+  .project-closed {
+    padding-block: 6px;
+    color: var(--muted);
+    opacity: 0.8;
   }
 
   .featured {
