@@ -12,7 +12,7 @@ repo: "https://github.com/jefo/realtime-kit"
 cover: "shots/realtime-kit.png"
 coverType: wide
 accent: green
-draft: true
+draft: false
 ---
 
 ## Что это
