@@ -11,62 +11,62 @@ const mailto = `mailto:${site.email}?subject=${encodeURIComponent("AI Content Op
 const steps = [
   {
     n: "01",
-    title: "KB-карточка",
-    text: "Факты, цена, дата проверки, профили поведения. Один компонент — один файл.",
+    title: "Карточка продукта",
+    text: "Что известно, откуда и насколько свежо. Один продукт — одна карточка.",
   },
   {
     n: "02",
-    title: "Narrative Arc",
-    text: "Problem → Design Space → Decision → Consequences → Tradeoff. Не outline, а карта трансформации.",
+    title: "Проверка",
+    text: "У каждой цифры источник, дата и статус: подтверждено или оценка.",
   },
   {
     n: "03",
-    title: "QA",
-    text: "Фактчекер и структурный аудитор параллельно. Выход — fix manifest, а не «наверное, норм».",
+    title: "Записка",
+    text: "Ограничение, компромисс, вывод — вместо таблицы характеристик.",
   },
   {
     n: "04",
-    title: "Writer’s Brief",
-    text: "Детерминированная компиляция арки в бриф: что читатель думает, что должен узнать, чем закрыть.",
+    title: "Сценарий",
+    text: "Что читатель думает до и что должен понять после. Путь, а не список разделов.",
   },
   {
     n: "05",
-    title: "Prose + Astro",
-    text: "Редактор пишет голос. Компоненты и данные собирают страницу.",
+    title: "Текст",
+    text: "Автор пишет голосом. Система даёт фактуру, структуру и проверки.",
   },
   {
     n: "06",
-    title: "Design",
-    text: "Эпистемические цвета, жанровые карточки, телеметрия. Дизайн показывает достоверность.",
+    title: "Страница",
+    text: "Дизайн собирается из системы: блоки, сетки, цвета достоверности.",
   },
 ];
 
 const ledger = [
   {
     material: "Core Ultra 5 225F",
-    checked: "52 факта, 6 структурных проверок",
+    checked: "52 факта, 6 проверок структуры",
     found: "0 ошибок, 0 противоречий",
     decision: "Опубликовано",
     tone: "ok",
   },
   {
     material: "Ryzen 7 9800X3D",
-    checked: "TJmax, N4/N4P, зависимые propositions",
-    found: "89 → 95 °C, N4 → N4P, каскад",
-    decision: "Каскадный фикс",
+    checked: "Цифры и связанные выводы",
+    found: "89 → 95 °C; выводы перестроены",
+    decision: "Исправлено до публикации",
     tone: "warn",
   },
   {
     material: "Ryzen 9 9950X",
-    checked: "27 фактов, 7 структурных проверок",
-    found: "1 FAIL, 2 CRITICAL, 4 HIGH, 6 MEDIUM",
+    checked: "27 фактов, 7 проверок структуры",
+    found: "1 фактическая ошибка; 2 критических противоречия; 4 серьёзных; 6 средних",
     decision: "Не опубликовано",
     tone: "stop",
   },
   {
     material: "RTX 5060 Ti 16GB",
     checked: "16 утверждений, 2+ источника",
-    found: "6 WARN, 0 BLOCK",
+    found: "6 уточнений; 0 блокеров",
     decision: "Опубликовано",
     tone: "ok",
   },
@@ -74,54 +74,92 @@ const ledger = [
 
 const limits = [
   {
-    title: "G1 не enforced",
-    text: "Канонический 9800X3D имеет external_audit_verification: planned. В KB — 10 passed, 14 planned, у 99 карточек поля нет. Формальный гейт есть в методе, но не на всех записях.",
+    title: "Не всё проверено автоматически",
+    text: "Часть карточек ещё ждёт ручной проверки. Это следующий шаг, а не готовое обещание.",
   },
   {
-    title: "Нет cycle time",
-    text: "Я не считал время и стоимость одного материала. Это первый управленческий показатель, который я бы поставил на таком контуре.",
+    title: "Нет замера времени",
+    text: "Я не считал стоимость одного материала. Это первый управленческий показатель на таком контуре.",
   },
   {
-    title: "Нет лаборатории",
-    text: "FPS — из открытых источников. «Measured» часто значит «взято из обзора», а не «измерено на стенде».",
+    title: "Нет своей лаборатории",
+    text: "Цифры производительности — из открытых источников. Собственные замеры — отдельный стенд.",
   },
   {
-    title: "Нет prose QA",
-    text: "Факты и арка проверяются, финальный тон и ссылки — нет. Это зафиксировано в собственном dependency graph.",
+    title: "Тон проверяет редактор",
+    text: "Факты и структура проверяются системой. Финальный тон и ссылки — человек.",
   },
   {
-    title: "Нет CI у сайта",
-    text: "Сборка проходит, но регрессии ловятся глазами. Для инженерного контента это слабое место.",
+    title: "Сайт собирается без автопроверок",
+    text: "Сборка проходит, но ошибки на странице ловятся глазами. Для инженерного контента это слабое место.",
   },
   {
     title: "Голос — человек",
-    text: "LLM даёт скелет, фактуру и вёрстку. Живой текст появляется после редактуры. Это не баг, это граница.",
+    text: "Система даёт скелет и фактуру. Живой текст появляется после автора.",
   },
 ];
 
 const range = [
   {
-    kicker: "Longread / 8 stages",
+    kicker: "Лонгрид / 8 шагов",
     title: "Frametime",
-    text: "7,5 тыс. слов пакета → 3,1 тыс. слов статьи. Recognition → Dissonance → Metaphor → Inversion → Tutorial → Investigation → Heuristics → Full Circle. Интерактивный метроном как якорь.",
+    text: "Объяснение механики: узнавание → сомнение → метафора → переворот → практика. 7,5 тыс. слов пакета → 3,1 тыс. слов статьи.",
     image: "igrolab-frametime.webp",
     href: "https://pekaboyare.ru/articles/how-frametime-works/",
     link: "Читать лонгрид",
   },
   {
-    kicker: "Case / 8 moves",
+    kicker: "Кейс / 8 шагов",
     title: "Oasis Node",
-    text: "Инженерный кейс: expose → destabilize → false-intuition → reframe → system-expand → forensic-validate → identity-synthesize → extract. Каждый move меняет perception, а не добавляет абзац.",
+    text: "История решения: запрос → ограничения → альтернативы → выбор → проверка → вывод. Каждый шаг меняет картину, а не добавляет абзац.",
     image: "igrolab-oasis.webp",
     href: "https://pekaboyare.ru/builds/silent-llm-workstation",
     link: "Смотреть кейс",
   },
 ];
+
+const gives = [
+  {
+    title: "Быстрее",
+    text: "Меньше рутины на входе: сбор, сведение, проверка.",
+  },
+  {
+    title: "Повторяемо",
+    text: "Один процесс на все материалы, а не «как получится».",
+  },
+  {
+    title: "Доверчивее",
+    text: "У каждой цифры есть источник, дата и степень уверенности.",
+  },
+  {
+    title: "Переиспользуемо",
+    text: "Знание живёт дольше одной статьи: обзор, сравнение, стоимость владения.",
+  },
+];
+
+const start = [
+  {
+    n: "01",
+    title: "Аудит 3 материалов",
+    text: "Где теряется время, какие факты не проверяются и что можно переиспользовать.",
+  },
+  {
+    n: "02",
+    title: "Пилот на 1–3 материалах",
+    text: "Проходим полный цикл и замеряем время, ошибки и количество правок.",
+  },
+  {
+    n: "03",
+    title: "Внедрение",
+    text: "Фиксируем процесс, роли и инструменты. Обучаем редакцию.",
+  },
+];
+
 ---
 
 <BaseLayout
-  title="ИгроЛаба — кейс AI Content Ops"
-  description="AI Content Ops на примере инженерного журнала: 225F — 52/52 факта, 9800X3D — самокоррекция, 9950X — QA остановил публикацию, RTX 5060 Ti — провенанс на странице."
+  title="ИгроЛаба — кейс: контент-процесс для экспертного сайта"
+  description="Как экспертное издание производит материалы быстрее и без потери доверия: сбор, проверка, аналитическая записка, сценарий, текст, страница."
 >
   <Header />
 
@@ -144,20 +182,20 @@ const range = [
           </h1>
 
           <p class="ops-lede">
-            ИгроЛаба — инженерный журнал о PC-железе. Под капотом — файловый
-            data warehouse: 17k наблюдений, 176 dimensions, lineage и confidence.
-            Система отличает измеренное от спроецированного; LLM делает research,
-            narrative и layout, а гейты и редактор решают, что выходит.
+            ИгроЛаба — инженерный журнал о PC-железе. Я построил процесс, в
+            котором система собирает факты, проверяет источники и готовит
+            аналитические записки, а автор пишет голосом и отвечает за вердикт.
+            Ниже — четыре материала и то, что каждый доказал.
           </p>
 
           <dl class="ops-meta">
             <div>
               <dt>Роль</dt>
-              <dd>Методология, пайплайн, редактура, дизайн</dd>
+              <dd>Процесс, редактура, дизайн</dd>
             </div>
             <div>
               <dt>Стек</dt>
-              <dd>Astro 6 · Svelte 5 · Python · YAML · LLM</dd>
+              <dd>Astro · Svelte · Python · LLM</dd>
             </div>
             <div>
               <dt>Статус</dt>
@@ -165,7 +203,7 @@ const range = [
             </div>
             <div>
               <dt>Артефакты</dt>
-              <dd>20 arc maps · 4 QA-отчёта</dd>
+              <dd>4 материала · 20 сценариев</dd>
             </div>
           </dl>
 
@@ -205,11 +243,11 @@ const range = [
 
       <section class="ops-section wrap" aria-labelledby="pipeline">
         <div class="ops-section-head">
-          <div class="ops-label mono">01 / pipeline</div>
-          <h2 id="pipeline">Один материал — шесть артефактов.</h2>
+          <div class="ops-label mono">01 / процесс</div>
+          <h2 id="pipeline">Один материал — шесть шагов.</h2>
           <p class="ops-section-note">
-            Каждый шаг оставляет файл. Поэтому можно проверить не только
-            результат, но и путь.
+            Каждый шаг оставляет след: что собрали, что проверили и что решили.
+            Поэтому можно проверить не только результат, но и путь.
           </p>
         </div>
 
@@ -235,7 +273,7 @@ const range = [
       <section class="ops-section ops-section-tint" aria-labelledby="materials">
         <div class="wrap">
           <div class="ops-section-head">
-            <div class="ops-label mono">02 / materials</div>
+            <div class="ops-label mono">02 / доказательства</div>
             <h2 id="materials">Четыре материала, четыре доказательства.</h2>
             <p class="ops-section-note">
               Не «мы используем AI», а что конкретно произошло с конкретным
@@ -245,26 +283,23 @@ const range = [
 
           <article class="material">
             <div class="material-copy">
-              <div class="material-kicker mono">01 / clean pass</div>
+              <div class="material-kicker mono">01 / чистая проверка</div>
               <h3>Core Ultra 5 225F</h3>
               <p>
-                Обзор процессора и сборки на LGA1851. Тезис: 225F — не
-                финальный CPU, а ключ к платформе. QA подтвердил все 52
-                утверждения, структурный аудитор не нашёл противоречий.
+                Материал прошёл проверку без единой ошибки: 52 утверждения,
+                ноль противоречий. Тезис из задания автору дошёл до страницы
+                без потерь.
               </p>
               <blockquote>
-                «225F покупают не ради самого процессора, а ради доступа к
-                PCIe 5.0 ×20, DDR5 и апгрейд-потенциалу LGA1851 — это
-                временный жилец сокета на 1–2 года.»
-                <cite>Writer’s Brief</cite>
+                «225F — не финальный процессор, а временный жилец сокета».
+                <cite>задание автору</cite>
               </blockquote>
               <p class="material-note">
-                На странице: «225F в этой схеме — не финальный процессор, а
-                временный жилец сокета на 12–18 месяцев». Метафора и тезис
-                дошли до читателя.
+                На странице — та же мысль. Это проверка, что система не
+                размывает тезис по дороге.
               </p>
               <dl class="proof">
-                <div><dt>QA</dt><dd>52/52</dd></div>
+                <div><dt>Проверено</dt><dd>52/52</dd></div>
                 <div><dt>Ошибок</dt><dd>0</dd></div>
                 <div><dt>Статус</dt><dd>Live</dd></div>
               </dl>
@@ -280,117 +315,105 @@ const range = [
 
           <article class="material material-reverse">
             <div class="material-copy">
-              <div class="material-kicker mono">02 / self-correction</div>
+              <div class="material-kicker mono">02 / самокоррекция</div>
               <h3>Ryzen 7 9800X3D</h3>
               <p>
-                В KB стояло <code>TJmax 89 °C</code> из training data. Фактчек
-                дал 95 °C; заодно исправили N4 → N4P. Механическая замена
-                оставила бы документ с внутренним противоречием: маркер говорит
-                95, а аргумент построен на 89.
+                В исходных данных стояло <code>89 °C</code>. Проверка дала
+                95 °C; заодно исправили ещё одну характеристику. Механическая замена
+                оставила бы противоречие: цифра новая, а выводы старые.
               </p>
               <blockquote>
-                «When qa-arc-map fact-checker corrected the number, it did not
-                cascade to dependent propositions.»
-                <cite>ADR-003</cite>
+                «Исправить цифру недостаточно. Нужно перестроить выводы,
+                которые на ней держались».
+                <cite>правило после инцидента</cite>
               </blockquote>
               <p class="material-note">
-                Поэтому появился класс <code>[factual/propagated]</code>:
-                чинится не строка, а вся зависимая логика.
+                Система чинит не строку, а цепочку: где ещё используется
+                эта цифра и что изменится в аргументе.
               </p>
               <dl class="proof">
                 <div><dt>Поймано</dt><dd>89 → 95</dd></div>
-                <div><dt>Каскад</dt><dd>1</dd></div>
-                <div><dt>Урок</dt><dd>ADR-003</dd></div>
+                <div><dt>Перестроено</dt><dd>1 цепочка</dd></div>
+                <div><dt>Статус</dt><dd>Исправлено</dd></div>
               </dl>
             </div>
-            <div class="material-terminal" aria-label="Фрагмент ADR-003">
+            <div class="material-terminal" aria-label="Что изменилось после проверки">
               <div class="terminal-top mono">
-                <span>ADR-003 / G6</span>
-                <span>factual/propagated</span>
+                <span>Что изменилось</span>
+                <span>аудит</span>
               </div>
-              <pre><code>[factual] TJmax
-location: §1.5, "89°C"
-current:  89°C
-fixed:    95°C
-source:   AMD product page
-
-[propagated] "TJmax ниже чем у non-X3D"
-depends_on: TJmax 95°C
-status:   proposition invalidated
-action:   rebuild Tradeoff + Anchor</code></pre>
+              <ul class="terminal-list">
+                <li><span>Было</span><span>89 °C</span></li>
+                <li><span>Стало</span><span>95 °C</span></li>
+                <li><span>Ещё</span><span>исправили характеристику</span></li>
+                <li><span>Перестроили</span><span>выводы, которые держались на 89 °C</span></li>
+                <li><span>Итог</span><span>материал опубликован без противоречия</span></li>
+              </ul>
               <div class="terminal-foot mono">
-                <span>KB commit</span>
-                <span>89 → 95 · N4 → N4P</span>
+                <span>источник</span>
+                <span>AMD product page</span>
               </div>
             </div>
           </article>
 
           <article class="material">
             <div class="material-copy">
-              <div class="material-kicker mono">03 / editorial hold</div>
+              <div class="material-kicker mono">03 / редакционный стоп</div>
               <h3>Ryzen 9 9950X</h3>
               <p>
-                Внутренний материал, который <strong>не был опубликован</strong>.
-                QA нашёл один факт-фейл: компиляция ядра 28 секунд против 47 у
-                Phoronix. Плюс два критических противоречия: Profile 3
-                рекомендует SFF, а IRV говорит «провал»; в таблице 170 W, в
-                тексте 148 W.
+                Материал выглядел готовым, но проверка нашла фактическую ошибку
+                и два критических противоречия. Мы <strong>не опубликовали</strong>
+                его.
               </p>
               <blockquote>
-                «PASS — с условиями. Требуется фикс 2 критических противоречий
-                перед публикацией.»
-                <cite>QA Arc-Map Report</cite>
+                «Лучше остановить материал, чем объяснять читателю, почему два
+                числа — одно и то же».
+                <cite>редакционное решение</cite>
               </blockquote>
               <p class="material-note">
-                Это не провал пайплайна. Это его работа: лучше остановить
-                материал, чем объяснять читателю, почему два числа — одно и то
-                же.
+                Это не провал системы. Это её работа: она умеет сказать «стоп»
+                до публикации, а не после.
               </p>
               <dl class="proof">
-                <div><dt>FAIL</dt><dd>1</dd></div>
-                <div><dt>CRITICAL</dt><dd>2</dd></div>
-                <div><dt>HIGH</dt><dd>4</dd></div>
-                <div><dt>MEDIUM</dt><dd>6</dd></div>
+                <div><dt>Ошибка</dt><dd>1</dd></div>
+                <div><dt>Критических</dt><dd>2</dd></div>
+                <div><dt>Статус</dt><dd>Стоп</dd></div>
               </dl>
             </div>
-            <div class="material-verdict" aria-label="Вердикт QA по 9950X">
+            <div class="material-verdict" aria-label="Решение по материалу 9950X">
               <div class="verdict-top mono">
-                <span>QA / 9950X</span>
-                <span>hold</span>
+                <span>9950X / проверка</span>
+                <span>стоп</span>
               </div>
-              <div class="verdict-status">PASS<br />— С УСЛОВИЯМИ</div>
+              <div class="verdict-status">НЕ<br />ПУБЛИКОВАТЬ</div>
               <ul class="verdict-list">
-                <li><span>Факты</span><span>18/27 OK · 1 FAIL · 5 WARN · 3 UNVERIFIED</span></li>
-                <li><span>Структура</span><span>2 CRITICAL · 4 HIGH · 6 MEDIUM</span></li>
-                <li><span>Решение</span><span>не публиковать до фикса</span></li>
+                <li><span>Факты</span><span>1 ошибка · 5 замечаний · 3 без подтверждения</span></li>
+                <li><span>Структура</span><span>2 критических · 4 серьёзных · 6 средних</span></li>
+                <li><span>Решение</span><span>сначала исправить, потом решать</span></li>
               </ul>
             </div>
           </article>
 
           <article class="material material-reverse">
             <div class="material-copy">
-              <div class="material-kicker mono">04 / provenance</div>
+              <div class="material-kicker mono">04 / проверка на странице</div>
               <h3>RTX 5060 Ti 16GB</h3>
               <p>
-                GPU-обзор, где проверка видна не во внутреннем отчёте, а на
-                странице. 16 ключевых утверждений, каждое — минимум два
-                источника: TechPowerUp, Wikipedia, Tom’s Hardware, TechSpot,
-                ComputerBase, 3DNews.
+                Проверка видна не в внутреннем отчёте, а на самой странице:
+                читатель видит, что спецификации проверены и когда.
               </p>
               <blockquote>
-                «Спецификации верифицированы · KB pc_hardware_knowledge_base ·
-                Аудит 20.06.2026.»
-                <cite>Плашка на странице</cite>
+                «Спецификации проверены · аудит 20.06.2026».
+                <cite>плашка на странице</cite>
               </blockquote>
               <p class="material-note">
-                Шесть WARN — не ошибки, а границы: TSMC 4N vs 4NP, округление
-                +56% vs +55.6%, БП 550 W vs 600 W. Они зафиксированы, а не
-                спрятаны.
+                Шесть уточнений — не ошибки, а границы: где источники
+                расходятся, где округление. Они зафиксированы, а не спрятаны.
               </p>
               <dl class="proof">
-                <div><dt>Claims</dt><dd>16</dd></div>
+                <div><dt>Утверждений</dt><dd>16</dd></div>
                 <div><dt>Источников</dt><dd>2+</dd></div>
-                <div><dt>WARN</dt><dd>6</dd></div>
+                <div><dt>Уточнений</dt><dd>6</dd></div>
               </dl>
               <a class="material-link mono" href="https://pekaboyare.ru/hardware/gpu/nvidia-geforce-rtx-5060-ti/" target="_blank" rel="noopener noreferrer">
                 открыть материал <span aria-hidden="true">↗</span>
@@ -406,7 +429,7 @@ action:   rebuild Tradeoff + Anchor</code></pre>
 
       <section class="ops-section wrap" aria-labelledby="ledger">
         <div class="ops-section-head">
-          <div class="ops-label mono">03 / ledger</div>
+          <div class="ops-label mono">03 / след проверки</div>
           <h2 id="ledger">Что поймали до публикации.</h2>
           <p class="ops-section-note">
             Не «всё проверено», а конкретный след: что искали, что нашли, что
@@ -435,22 +458,22 @@ action:   rebuild Tradeoff + Anchor</code></pre>
           <div class="number">
             <div class="number-value">99</div>
             <div class="number-label">страниц собрано</div>
-            <div class="number-note mono">~8 секунд build</div>
+            <div class="number-note mono">~8 секунд сборка</div>
           </div>
           <div class="number">
             <div class="number-value">123</div>
-            <div class="number-label">карточки в KB</div>
-            <div class="number-note mono">97 с профилями</div>
+            <div class="number-label">карточки знаний</div>
+            <div class="number-note mono">97 с описанием поведения</div>
           </div>
           <div class="number">
             <div class="number-value">20</div>
-            <div class="number-label">narrative arcs</div>
-            <div class="number-note mono">6 briefs · 4 QA</div>
+            <div class="number-label">сценариев материалов</div>
+            <div class="number-note mono">6 заданий · 4 проверки</div>
           </div>
           <div class="number">
             <div class="number-value">14</div>
-            <div class="number-label">детерминированных проверок</div>
-            <div class="number-note mono">PCBO · fail closed</div>
+            <div class="number-label">проверок сборки</div>
+            <div class="number-note mono">сборка не проходит молча</div>
           </div>
         </div>
       </section>
@@ -458,7 +481,7 @@ action:   rebuild Tradeoff + Anchor</code></pre>
       <section class="ops-section ops-section-tint" aria-labelledby="range">
         <div class="wrap">
           <div class="ops-section-head">
-            <div class="ops-label mono">04 / range</div>
+            <div class="ops-label mono">04 / форматы</div>
             <h2 id="range">Не только обзоры.</h2>
             <p class="ops-section-note">
               Один контур — разные жанры. Формат меняется, дисциплина — нет.
@@ -485,31 +508,74 @@ action:   rebuild Tradeoff + Anchor</code></pre>
         </div>
       </section>
 
-      <section class="ops-section wrap" aria-labelledby="limits">
+      <section class="ops-section wrap" aria-labelledby="gives">
         <div class="ops-section-head">
-          <div class="ops-label mono">05 / limits</div>
-          <h2 id="limits">Что это не доказывает.</h2>
+          <div class="ops-label mono">05 / что это даёт</div>
+          <h2 id="gives">Четыре вещи, которые меняются для редакции.</h2>
           <p class="ops-section-note">
-            Без этого блока кейс превращается в рекламу. С ним — в рабочий
-            разговор.
+            Не «стало красивее», а что конкретно перестаёт съедать время.
           </p>
         </div>
 
-        <div class="limit-grid">
-          {limits.map((limit) => (
-            <article class="limit">
-              <h3>{limit.title}</h3>
-              <p>{limit.text}</p>
+        <div class="gives-grid">
+          {gives.map((item) => (
+            <article class="give">
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
             </article>
           ))}
         </div>
+      </section>
+
+      <section class="ops-section ops-section-tint" aria-labelledby="limits">
+        <div class="wrap">
+          <div class="ops-section-head">
+            <div class="ops-label mono">06 / границы</div>
+            <h2 id="limits">Что это не доказывает.</h2>
+            <p class="ops-section-note">
+              Без этого блока кейс превращается в рекламу. С ним — в рабочий
+              разговор.
+            </p>
+          </div>
+
+          <div class="limit-grid">
+            {limits.map((limit) => (
+              <article class="limit">
+                <h3>{limit.title}</h3>
+                <p>{limit.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="ops-section wrap" aria-labelledby="start">
+        <div class="ops-section-head">
+          <div class="ops-label mono">07 / как начать</div>
+          <h2 id="start">Не «написать 100 статей». Три шага.</h2>
+          <p class="ops-section-note">
+            Сначала — понять, где редакция тратит время впустую.
+          </p>
+        </div>
+
+        <ol class="start-list">
+          {start.map((item) => (
+            <li>
+              <span class="start-num mono">{item.n}</span>
+              <div>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section class="case-cta">
         <div class="wrap case-cta-inner">
           <div>
             <div class="mono">AI Content Ops</div>
-            <h2>Нужен человек, который построит такой контур?</h2>
+            <h2>Хочешь такой процесс для своего сайта?</h2>
           </div>
           <div class="case-cta-actions">
             <a class="ops-button" href={mailto}>
@@ -936,6 +1002,33 @@ action:   rebuild Tradeoff + Anchor</code></pre>
     color: #d9d5cb;
   }
 
+  .terminal-list {
+    margin: 0;
+    padding: 12px 18px;
+    list-style: none;
+  }
+
+  .terminal-list li {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid #23262a;
+    color: #c9c4b8;
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+
+  .terminal-list li:last-child {
+    border-bottom: 0;
+  }
+
+  .terminal-list li span:first-child {
+    color: #8f9299;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
   .material-terminal code {
     font-family: inherit;
   }
@@ -1141,6 +1234,69 @@ action:   rebuild Tradeoff + Anchor</code></pre>
     line-height: 1.5;
   }
 
+  .gives-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .give {
+    padding: clamp(22px, 3vw, 34px);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .give h3 {
+    font-family: var(--serif);
+    font-size: clamp(22px, 2.4vw, 30px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .give p {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .start-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .start-list li {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 20px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .start-num {
+    color: var(--signal-text);
+  }
+
+  .start-list h3 {
+    font-family: var(--serif);
+    font-size: clamp(24px, 2.6vw, 32px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .start-list p {
+    max-width: 56ch;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
   .case-cta {
     background: var(--ink);
     color: var(--paper);
@@ -1249,6 +1405,10 @@ action:   rebuild Tradeoff + Anchor</code></pre>
     .range-grid {
       grid-template-columns: 1fr;
     }
+
+    .gives-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   @media (max-width: 720px) {
@@ -1295,6 +1455,14 @@ action:   rebuild Tradeoff + Anchor</code></pre>
 
     .limit-grid {
       grid-template-columns: 1fr;
+    }
+
+    .gives-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .start-list li {
+      grid-template-columns: 48px minmax(0, 1fr);
     }
 
     .case-cta-inner {

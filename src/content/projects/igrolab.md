@@ -1,13 +1,13 @@
 ---
 title: "ИгроЛаба"
-summary: "Инженерный журнал на файловом DWH: 17k наблюдений, 29 CPU-профилей, IRV и QA-гейты. 225F — 52/52; 9950X — QA остановил публикацию."
+summary: "Контент-процесс для экспертного сайта: сбор, проверка, аналитические записки, сценарии, тексты. 225F — 52/52; 9950X — материал остановлен."
 category: engine
 kind: "AI content operations"
 year: 2026
 order: 2
 status: "Live · 99 страниц"
 stack: ["Astro 6", "Svelte 5", "Python", "YAML", "LLM"]
-tests: "17k facts · 20 arc maps · 4 QA"
+tests: "4 материала · 20 сценариев · 99 страниц"
 caseUrl: "/cases/igrolab"
 cover: "shots/igrolab-issue.webp"
 coverType: wide
