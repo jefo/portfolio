@@ -9,79 +9,131 @@ const img = (name: string) => `${base}shots/${name}`;
 const mailto = `mailto:${site.email}?subject=${encodeURIComponent("AI Content Ops: walkthrough")}`;
 
 const steps = [
-  { n: "01", label: "Intake", short: "Сырьё → структура" },
-  { n: "02", label: "Warehouse", short: "Один факт → много страниц" },
-  { n: "03", label: "Analysis", short: "IRV вместо таблицы" },
-  { n: "04", label: "Narrative", short: "Анализ → траектория" },
-  { n: "05", label: "Brief", short: "Компиляция, не вдохновение" },
-  { n: "06", label: "Render", short: "Страница как сборка" },
-  { n: "07", label: "Feedback", short: "Материал не заканчивается" },
+  { n: "01", label: "Сбор", short: "Один вход" },
+  { n: "02", label: "Проверка", short: "Паспорт цифры" },
+  { n: "03", label: "Анализ", short: "Записка" },
+  { n: "04", label: "Сценарий", short: "Задание автору" },
+  { n: "05", label: "Текст", short: "Голос" },
+  { n: "06", label: "Страница", short: "Сборка" },
+  { n: "07", label: "Обновление", short: "Сигнал" },
 ];
 
 const beforeAfter = [
   {
     step: "Сбор",
-    manual: "2–3 дня чтения (оценка)",
-    system: "Агент извлекает и нормализует",
-    human: "Утверждает спорное",
+    before: "Дни чтения обзоров",
+    after: "Один вход: спека, обзоры, цены",
+    human: "Проверяет, что не потеряно",
   },
   {
-    step: "Таблица",
-    manual: "Руками, быстро устаревает",
-    system: "DWH: одна запись на факт",
-    human: "—",
+    step: "Проверка",
+    before: "На глаз",
+    after: "Паспорт каждой цифры",
+    human: "Решает, какие оценки допустимы",
   },
   {
     step: "Анализ",
-    manual: "В голове, не воспроизводим",
-    system: "IRV + lineage",
-    human: "Валидирует assumptions",
+    before: "В голове, не воспроизводим",
+    after: "Записка: ограничение, компромисс, вывод",
+    human: "Валидирует выводы",
+  },
+  {
+    step: "Сценарий",
+    before: "С нуля",
+    after: "Задание: до / после / путь / тон",
+    human: "Утверждает",
   },
   {
     step: "Текст",
-    manual: "С нуля",
-    system: "NAM → brief → prose",
-    human: "Голос и финал",
+    before: "С нуля",
+    after: "Фактура и структура",
+    human: "Пишет голосом",
   },
   {
-    step: "QA",
-    manual: "Выборочно",
-    system: "52/52 или hold",
-    human: "Решает, что делать с WARN",
-  },
-  {
-    step: "Переиспользование",
-    manual: "Копипаста",
-    system: "Один факт → много страниц",
-    human: "—",
+    step: "Страница",
+    before: "Рисуется с нуля",
+    after: "Собирается из системы",
+    human: "Вычитывает",
   },
   {
     step: "Обновление",
-    manual: "Вручную",
-    system: "Stale detection",
+    before: "Вручную",
+    after: "Сигнал: драйвер, цена, конкурент",
     human: "Решает приоритет",
+  },
+];
+
+const gives = [
+  {
+    title: "Быстрее",
+    text: "Меньше рутины на входе: сбор, сведение, проверка.",
+  },
+  {
+    title: "Повторяемо",
+    text: "Один процесс на все материалы, а не «как получится».",
+  },
+  {
+    title: "Доверчивее",
+    text: "У каждой цифры есть источник, дата и степень уверенности.",
+  },
+  {
+    title: "Переиспользуемо",
+    text: "Знание живёт дольше одной статьи: обзор, сравнение, стоимость владения.",
+  },
+];
+
+const human = [
+  {
+    title: "Голос",
+    text: "Система не пишет так, как пишет автор. Финальный текст — за ним.",
+  },
+  {
+    title: "Решение",
+    text: "Что важно, что спорно, что не стоит публиковать.",
+  },
+  {
+    title: "Отношения",
+    text: "С экспертами, читателями и рынком. Это не автоматизируется.",
   },
 ];
 
 const limits = [
   {
-    title: "Не измеряет",
-    text: "Это не лаборатория. FPS — из открытых источников; проекции помечены как проекции.",
+    title: "Не лаборатория",
+    text: "Если нужны собственные замеры — это отдельный стенд, а не контент-система.",
   },
   {
     title: "Не пишет голос",
-    text: "LLM даёт скелет и фактуру. Живой текст появляется после редактора.",
+    text: "LLM даёт фактуру и структуру. Живой текст появляется после автора.",
   },
   {
     title: "Не работает без данных",
     text: "Нет источника — нет факта. Нет факта — нет вывода. Система не заполняет дыры вымыслом.",
   },
 ];
+
+const start = [
+  {
+    n: "01",
+    title: "Аудит 3 материалов",
+    text: "Смотрим, где теряется время, какие факты не проверяются и что можно переиспользовать.",
+  },
+  {
+    n: "02",
+    title: "Пилот на 1–3 материалах",
+    text: "Проходим полный цикл и замеряем время, ошибки и количество правок.",
+  },
+  {
+    n: "03",
+    title: "Внедрение",
+    text: "Фиксируем процесс, роли и инструменты. Обучаем редакцию.",
+  },
+];
 ---
 
 <BaseLayout
-  title="Walkthrough — один цикл контент-фабрики"
-  description="Как из одной спеки и трёх обзоров получается инженерный бриф и страница: DWH, IRV, NAM, QA, render. RX 9050 как иллюстрация."
+  title="Walkthrough — как один материал проходит через редакцию"
+  description="Путь одного материала от сырья до публикации: сбор, проверка, анализ, сценарий, текст, страница, обновление. RX 9050 как пример."
 >
   <Header />
 
@@ -99,13 +151,13 @@ const limits = [
           </div>
 
           <h1 class="walk-title">
-            Один цикл:<br />
-            от спеки до страницы.
+            Как один материал<br />
+            проходит через редакцию.
           </h1>
 
           <p class="walk-lede">
-            Radeon RX 9050 — только иллюстрация. Важно, что на каждом шаге
-            появляется артефакт, кто его проверяет и что остаётся человеку.
+            RX 9050 — пример. Речь о процессе, который можно перенести на любой
+            экспертный сайт: меньше рутины, больше авторской работы.
           </p>
 
           <dl class="walk-meta">
@@ -119,11 +171,11 @@ const limits = [
             </div>
             <div>
               <dt>Выход</dt>
-              <dd>IRV · NAM · страница</dd>
+              <dd>Записка · статья</dd>
             </div>
             <div>
               <dt>Роль</dt>
-              <dd>DWH · редактура · дизайн</dd>
+              <dd>Редакция · система</dd>
             </div>
           </dl>
         </div>
@@ -143,218 +195,243 @@ const limits = [
         </div>
       </div>
 
-      <section class="walk-step wrap" aria-labelledby="s1">
-        <aside class="step-meta">
+      <section class="step wrap" aria-labelledby="s1">
+        <aside class="step-side">
           <div class="step-num">01</div>
-          <div class="step-label mono">Intake</div>
+          <div class="step-label mono">Сбор</div>
           <div class="step-roles">
-            <span>AI</span>
-            <span>Human</span>
+            <span>Система</span>
+            <span>Человек</span>
           </div>
         </aside>
         <div class="step-body">
-          <h2 id="s1">Агент раскладывает сырьё в структуру.</h2>
+          <h2 id="s1">Из десяти источников — один вход.</h2>
           <p>
-            Из спеки и трёх обзоров появляется dimension, 20 наблюдений и
-            provenance. Не «текст», а данные, с которыми можно работать.
+            Автор больше не читает всё подряд. Система собирает спеку, обзоры и
+            цены в одну карточку: что известно, откуда и насколько свежо.
           </p>
 
-          <div class="artifact">
-            <div class="artifact-head mono">
-              <span>artifact</span>
-              <span>dim + facts</span>
+          <div class="card">
+            <div class="card-head mono">
+              <span>Карточка продукта</span>
+              <span>собрано</span>
             </div>
-            <pre><code>dimension: amd-radeon-rx-9050
-attributes:
-  tdp_w: 92
-  vram_gb: 8
-  msrp_usd: 279
-facts: 20
-confidence: 0.45–0.90
-source_url: ...</code></pre>
+            <div class="card-row">
+              <span>Radeon RX 9050</span>
+              <span class="mono">92 W · 8 GB · $279</span>
+            </div>
+            <div class="card-row">
+              <span>Источники</span>
+              <span class="mono">1 спека + 3 обзора</span>
+            </div>
+            <div class="card-row">
+              <span>Статус</span>
+              <span class="mono">собрано</span>
+            </div>
           </div>
 
-          <ul class="gates">
-            <li><span class="mono">gate</span> fact-insert: mandatory dims, allowed measures, dedupe, provenance</li>
-          </ul>
-          <p class="hardware-note">
-            Деталь железа: 92 W, 8 GB, $279. Дальше не углубляемся.
+          <p class="human-line">
+            <strong>Человек:</strong> проверяет, что ничего важного не потеряно.
           </p>
+          <ul class="gates">
+            <li>Проверка: обязательные поля, источники, дубли.</li>
+          </ul>
         </div>
       </section>
 
-      <section class="walk-step walk-step-tint" aria-labelledby="s2">
+      <section class="step step-tint" aria-labelledby="s2">
         <div class="wrap step-grid">
-          <aside class="step-meta">
+          <aside class="step-side">
             <div class="step-num">02</div>
-            <div class="step-label mono">Warehouse</div>
+            <div class="step-label mono">Проверка</div>
             <div class="step-roles">
-              <span>AI</span>
+              <span>Система</span>
+              <span>Человек</span>
             </div>
           </aside>
           <div class="step-body">
-            <h2 id="s2">Один факт — много страниц.</h2>
+            <h2 id="s2">У каждой цифры есть паспорт.</h2>
             <p>
-              Факт больше не принадлежит одной статье. Он доступен обзору,
-              сравнению, TCO, lifecycle и coverage.
+              Система показывает не только цифру, но и её происхождение. Это не
+              «доверьтесь AI» — это «вот источник, дата и степень уверенности».
             </p>
 
-            <div class="artifact artifact-map">
-              <div class="map-root mono">fact</div>
-              <div class="map-lines" aria-hidden="true"></div>
-              <ul>
-                <li>review</li>
-                <li>compare</li>
-                <li>TCO</li>
-                <li>lifecycle</li>
-                <li>coverage</li>
-              </ul>
+            <div class="check-table">
+              <div class="check-row check-head mono">
+                <span>Цифра</span>
+                <span>Откуда</span>
+                <span>Когда</span>
+                <span>Статус</span>
+              </div>
+              <div class="check-row">
+                <span>92 W</span>
+                <span>спека</span>
+                <span>июль</span>
+                <span class="ok">подтверждено</span>
+              </div>
+              <div class="check-row">
+                <span>8 GB</span>
+                <span>спека</span>
+                <span>июль</span>
+                <span class="ok">подтверждено</span>
+              </div>
+              <div class="check-row">
+                <span>FPS</span>
+                <span>обзор</span>
+                <span>июль</span>
+                <span class="warn">оценка</span>
+              </div>
+              <div class="check-row">
+                <span>Цена</span>
+                <span>price.ru</span>
+                <span>июль</span>
+                <span class="ok">подтверждено</span>
+              </div>
             </div>
 
+            <p class="human-line">
+              <strong>Человек:</strong> решает, какие оценки допустимы в тексте.
+            </p>
             <ul class="gates">
-              <li><span class="mono">gate</span> bus matrix + context map</li>
+              <li>Проверка: нет источника — нет цифры.</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <section class="walk-step wrap" aria-labelledby="s3">
-        <aside class="step-meta">
+      <section class="step wrap" aria-labelledby="s3">
+        <aside class="step-side">
           <div class="step-num">03</div>
-          <div class="step-label mono">Analysis</div>
+          <div class="step-label mono">Анализ</div>
           <div class="step-roles">
-            <span>AI</span>
-            <span>Human</span>
+            <span>Система</span>
+            <span>Человек</span>
           </div>
         </aside>
         <div class="step-body">
-          <h2 id="s3">IRV: инженерный бриф вместо таблицы.</h2>
+          <h2 id="s3">Вместо таблицы — записка.</h2>
           <p>
-            Система собирает hypothesis, constraint hierarchy, design space,
-            decisions и consequences. Не «что в спеке», а «почему продукт такой».
+            Система собирает не «характеристики», а инженерную записку: главное
+            ограничение, компромиссы, что невозможно и почему.
           </p>
 
-          <div class="artifact artifact-list">
-            <div class="artifact-head mono">
-              <span>IRV</span>
-              <span>7 блоков</span>
+          <div class="card">
+            <div class="card-head mono">
+              <span>Аналитическая записка</span>
+              <span>4 вывода</span>
             </div>
-            <ol>
-              <li><span>hypothesis</span> — что здесь главное ограничение</li>
-              <li><span>constraints</span> — физика / реализация / бизнес</li>
-              <li><span>design space</span> — что отвергнуто и почему</li>
-              <li><span>decisions</span> — что решили и чем пожертвовали</li>
-              <li><span>consequences</span> — что из этого следует</li>
-              <li><span>uncertainty</span> — где данные, а где предположение</li>
-            </ol>
+            <ul class="note-list">
+              <li><span>Ограничение</span> 92 W — не компромисс, а принцип</li>
+              <li><span>Следствие</span> размер, цена, аудитория</li>
+              <li><span>Невозможно</span> 16 GB без другого продукта</li>
+              <li><span>Значит</span> SFF-инструмент, а не «слабая карта»</li>
+            </ul>
           </div>
 
           <blockquote>
-            «16 GB потребовали бы 192-битной шины и другой платы — это уже
-            другой продукт, а не “жадность”.»
-            <cite>IRV, RX 9050</cite>
+            «16 GB потребовали бы другой платы и другого продукта — это не
+            жадность, а физика».
+            <cite>из аналитической записки</cite>
           </blockquote>
 
+          <p class="human-line">
+            <strong>Человек:</strong> эксперт валидирует выводы.
+          </p>
           <ul class="gates">
-            <li><span class="mono">gate</span> lineage + epistemic markers</li>
+            <li>Проверка: каждый вывод связан с фактом.</li>
           </ul>
         </div>
       </section>
 
-      <section class="walk-step walk-step-tint" aria-labelledby="s4">
+      <section class="step step-tint" aria-labelledby="s4">
         <div class="wrap step-grid">
-          <aside class="step-meta">
+          <aside class="step-side">
             <div class="step-num">04</div>
-            <div class="step-label mono">Narrative</div>
+            <div class="step-label mono">Сценарий</div>
             <div class="step-roles">
-              <span>AI</span>
-              <span>Human</span>
+              <span>Система</span>
+              <span>Человек</span>
             </div>
           </aside>
           <div class="step-body">
-            <h2 id="s4">Из анализа — в траекторию читателя.</h2>
+            <h2 id="s4">Вместо «напиши статью» — задание.</h2>
             <p>
-              IRV — инженерная правда. Дальше — Problem Space, State A,
-              Resistance, Target X, Lens. QA проверяет факты, структуру и якоря.
+              Система формулирует, что читатель думает до, что должен понять
+              после и каким путём. Автор не гадает, с чего начать.
             </p>
 
-            <div class="qa-cards">
-              <article class="qa-card qa-card-ok">
-                <div class="mono">225F / clean pass</div>
-                <div class="qa-value">52/52</div>
-                <p>0 ошибок · опубликовано</p>
-              </article>
-              <article class="qa-card qa-card-stop">
-                <div class="mono">9950X / editorial hold</div>
-                <div class="qa-value">1 FAIL</div>
-                <p>2 CRITICAL · не опубликовано</p>
-              </article>
+            <div class="card">
+              <div class="card-head mono">
+                <span>Задание автору</span>
+                <span>сценарий</span>
+              </div>
+              <ul class="note-list">
+                <li><span>До</span> «слабая карта — плохая покупка»</li>
+                <li><span>После</span> «92 W — принцип SFF-продукта»</li>
+                <li><span>Путь</span> сомнение → факты → переворот → вывод</li>
+                <li><span>Тон</span> без вердикта</li>
+              </ul>
             </div>
 
+            <p class="human-line">
+              <strong>Человек:</strong> редактор утверждает сценарий.
+            </p>
             <ul class="gates">
-              <li><span class="mono">gate</span> fact-check + structure + anchor audit</li>
+              <li>Проверка: сценарий не противоречит фактам и логике.</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <section class="walk-step wrap" aria-labelledby="s5">
-        <aside class="step-meta">
+      <section class="step wrap" aria-labelledby="s5">
+        <aside class="step-side">
           <div class="step-num">05</div>
-          <div class="step-label mono">Brief</div>
+          <div class="step-label mono">Текст</div>
           <div class="step-roles">
-            <span>AI</span>
-            <span>Human</span>
+            <span>Человек</span>
           </div>
         </aside>
         <div class="step-body">
-          <h2 id="s5">Бриф — компиляция, не вдохновение.</h2>
+          <h2 id="s5">Автор пишет голосом.</h2>
           <p>
-            Arc превращается в Writer’s Brief: что читатель думает до, что
-            должен узнать после, какие факты закрыть, какой тон и длина.
+            Система не пишет финальный текст. Она даёт проверенные факты,
+            структуру и задание. Автор пишет так, как умеет только он.
           </p>
 
-          <div class="artifact">
-            <div class="artifact-head mono">
-              <span>brief</span>
-              <span>extract</span>
-            </div>
-            <pre><code>READER COMES IN THINKING:
-  «Слабая карта — значит, плохая покупка.»
+          <blockquote class="big-quote">
+            «Не смотрите на 16 CU.<br />
+            Смотрите на 92 W.»
+            <cite>авторская формулировка, выросшая из записки</cite>
+          </blockquote>
 
-LEAVE READER KNOWING:
-  92 W — не компромисс, а организующий
-  принцип SFF-продукта.
-
-TONE: без вердикта
-LENGTH: L</code></pre>
-          </div>
-
+          <p class="human-line">
+            <strong>Человек:</strong> пишет.
+          </p>
           <ul class="gates">
-            <li><span class="mono">gate</span> SHA sync: Arc изменился → Brief устарел</li>
+            <li>Проверка: факты не разошлись с источниками.</li>
           </ul>
         </div>
       </section>
 
-      <section class="walk-step walk-step-tint" aria-labelledby="s6">
+      <section class="step step-tint" aria-labelledby="s6">
         <div class="wrap step-grid">
-          <aside class="step-meta">
+          <aside class="step-side">
             <div class="step-num">06</div>
-            <div class="step-label mono">Render</div>
+            <div class="step-label mono">Страница</div>
             <div class="step-roles">
-              <span>AI</span>
-              <span>Human</span>
+              <span>Система</span>
+              <span>Человек</span>
             </div>
           </aside>
           <div class="step-body">
-            <h2 id="s6">Страница как сборка.</h2>
+            <h2 id="s6">Дизайн собирается из системы.</h2>
             <p>
-              Prose + компоненты + дизайн-система: 14 layouts, эпистемические
-              цвета, data-viz. Сборка — это ещё один гейт, а не «надеюсь,
-              всё влезло».
+              Страница не рисуется с нуля: 14 типов страниц, готовые блоки,
+              цвета достоверности. Дизайн помогает читателю видеть, где факт,
+              где оценка, где вывод.
             </p>
 
-            <figure class="render-shot">
+            <figure class="shot">
               <img
                 src={img("igrolab-rx9050.webp")}
                 alt="Страница обзора Radeon RX 9050: тёмный инженерный лонгрид с заголовком «92W»"
@@ -365,102 +442,160 @@ LENGTH: L</code></pre>
               <figcaption class="mono">/gpu/radeon-rx-9050-review/</figcaption>
             </figure>
 
+            <p class="human-line">
+              <strong>Человек:</strong> финальная вычитка.
+            </p>
             <ul class="gates">
-              <li><span class="mono">gate</span> build + links + final read</li>
+              <li>Проверка: сборка, ссылки, читаемость.</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <section class="walk-step wrap" aria-labelledby="s7">
-        <aside class="step-meta">
+      <section class="step wrap" aria-labelledby="s7">
+        <aside class="step-side">
           <div class="step-num">07</div>
-          <div class="step-label mono">Feedback</div>
+          <div class="step-label mono">Обновление</div>
           <div class="step-roles">
-            <span>AI</span>
-            <span>Human</span>
+            <span>Система</span>
+            <span>Человек</span>
           </div>
         </aside>
         <div class="step-body">
-          <h2 id="s7">Материал не заканчивается публикацией.</h2>
+          <h2 id="s7">Материал говорит, когда устарел.</h2>
           <p>
-            У артефакта есть stale_if: новый драйвер, новая цена, новый
-            конкурент. Система помечает материал и предлагает пересобрать.
+            Новый драйвер, новая цена, новый конкурент — система помечает
+            материал и предлагает обновить. Редакция не держит это в голове.
           </p>
 
-          <div class="artifact">
-            <div class="artifact-head mono">
-              <span>stale_if</span>
-              <span>feedback</span>
+          <div class="card">
+            <div class="card-head mono">
+              <span>Что делает материал устаревшим</span>
+              <span>сигнал</span>
             </div>
-            <pre><code>stale_if:
-  - driver_version
-  - price
-  - competitor
-  - law_update
-
-action: regenerate / review</code></pre>
+            <ul class="note-list">
+              <li><span>Драйвер</span> новая версия</li>
+              <li><span>Цена</span> изменилась</li>
+              <li><span>Конкурент</span> вышел новый продукт</li>
+              <li><span>Методика</span> обновилась</li>
+            </ul>
           </div>
 
+          <p class="human-line">
+            <strong>Человек:</strong> решает, что обновлять сейчас.
+          </p>
           <ul class="gates">
-            <li><span class="mono">gate</span> coverage + freshness</li>
+            <li>Проверка: свежесть и полнота.</li>
           </ul>
         </div>
       </section>
 
-      <section class="walk-section wrap" aria-labelledby="before-after">
-        <div class="walk-section-head">
-          <div class="walk-label mono">08 / before / after</div>
-          <h2 id="before-after">Что изменилось по сравнению с ручным циклом.</h2>
+      <section class="section wrap" aria-labelledby="before-after">
+        <div class="section-head">
+          <div class="section-label mono">08 / было / стало</div>
+          <h2 id="before-after">Что изменилось в работе редакции.</h2>
         </div>
 
         <div class="ba-table">
           <div class="ba-row ba-head mono">
             <span>Шаг</span>
-            <span>Вручную</span>
-            <span>В системе</span>
+            <span>Было</span>
+            <span>Стало</span>
             <span>Человек</span>
           </div>
           {beforeAfter.map((row) => (
             <div class="ba-row">
               <span class="ba-step">{row.step}</span>
-              <span>{row.manual}</span>
-              <span>{row.system}</span>
+              <span>{row.before}</span>
+              <span>{row.after}</span>
               <span>{row.human}</span>
             </div>
           ))}
         </div>
 
-        <p class="walk-note">
-          Система убирает <strong>первый проход</strong>: чтение, сведение,
+        <p class="section-note">
+          Система убирает <strong>первый проход</strong>: сбор, сведение,
           проверку, поиск противоречий. Она не убирает <strong>последний</strong>:
-          голос, judgment, ответственность.
+          голос, решение, ответственность.
         </p>
       </section>
 
-      <section class="walk-section walk-section-tint" aria-labelledby="limits">
+      <section class="section section-tint" aria-labelledby="gives">
         <div class="wrap">
-          <div class="walk-section-head">
-            <div class="walk-label mono">09 / limits</div>
-            <h2 id="limits">Что система не делает.</h2>
+          <div class="section-head">
+            <div class="section-label mono">09 / что это даёт</div>
+            <h2 id="gives">Четыре вещи, которые меняются для редакции.</h2>
           </div>
 
-          <div class="limit-grid">
-            {limits.map((limit) => (
-              <article class="limit">
-                <h3>{limit.title}</h3>
-                <p>{limit.text}</p>
+          <div class="grid-4">
+            {gives.map((item) => (
+              <article class="cell">
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
+      <section class="section wrap" aria-labelledby="human">
+        <div class="section-head">
+          <div class="section-label mono">10 / что остаётся человеку</div>
+          <h2 id="human">То, что не автоматизируется.</h2>
+        </div>
+
+        <div class="grid-3">
+          {human.map((item) => (
+            <article class="cell">
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="section section-tint" aria-labelledby="limits">
+        <div class="wrap">
+          <div class="section-head">
+            <div class="section-label mono">11 / чего это не делает</div>
+            <h2 id="limits">Границы, которые лучше назвать сразу.</h2>
+          </div>
+
+          <div class="grid-3">
+            {limits.map((item) => (
+              <article class="cell">
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="section wrap" aria-labelledby="start">
+        <div class="section-head">
+          <div class="section-label mono">12 / как начать</div>
+          <h2 id="start">Не «написать 100 статей». Три шага.</h2>
+        </div>
+
+        <ol class="start-list">
+          {start.map((item) => (
+            <li>
+              <span class="start-num mono">{item.n}</span>
+              <div>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <section class="walk-cta">
         <div class="wrap walk-cta-inner">
           <div>
             <div class="mono">AI Content Ops</div>
-            <h2>Хочешь такой контур для своего сайта?</h2>
+            <h2>Хочешь такой процесс для своего сайта?</h2>
           </div>
           <div class="walk-cta-actions">
             <a class="walk-button" href={mailto}>
@@ -509,10 +644,10 @@ action: regenerate / review</code></pre>
   }
 
   .walk-title {
-    max-width: 18ch;
+    max-width: 20ch;
     margin-top: clamp(26px, 4vw, 44px);
     font-family: var(--serif);
-    font-size: clamp(44px, 7.4vw, 104px);
+    font-size: clamp(42px, 6.8vw, 94px);
     font-weight: 500;
     line-height: 0.94;
     letter-spacing: -0.05em;
@@ -603,28 +738,28 @@ action: regenerate / review</code></pre>
     line-height: 1.35;
   }
 
-  .walk-step {
+  .step {
     padding-block: clamp(56px, 8vw, 104px);
     border-bottom: 1px solid var(--line);
   }
 
-  .walk-step-tint {
+  .step-tint {
     background: var(--paper-2);
+  }
+
+  .step.wrap {
+    display: grid;
+    grid-template-columns: 170px minmax(0, 1fr);
+    gap: clamp(28px, 5vw, 72px);
   }
 
   .step-grid {
     display: grid;
-    grid-template-columns: 160px minmax(0, 1fr);
+    grid-template-columns: 170px minmax(0, 1fr);
     gap: clamp(28px, 5vw, 72px);
   }
 
-  .walk-step.wrap {
-    display: grid;
-    grid-template-columns: 160px minmax(0, 1fr);
-    gap: clamp(28px, 5vw, 72px);
-  }
-
-  .step-meta {
+  .step-side {
     align-self: start;
     position: sticky;
     top: 24px;
@@ -683,21 +818,25 @@ action: regenerate / review</code></pre>
     line-height: 1.55;
   }
 
-  .hardware-note {
-    margin-top: 14px;
-    color: var(--faint) !important;
-    font-family: var(--mono);
-    font-size: 11px !important;
-    letter-spacing: 0.04em;
+  .human-line {
+    max-width: 56ch;
+    margin-top: 18px;
+    color: var(--muted) !important;
+    font-size: 15px !important;
   }
 
-  .artifact {
+  .human-line strong {
+    color: var(--ink);
+    font-weight: 560;
+  }
+
+  .card {
     margin-top: 26px;
     border: 1px solid var(--line-strong);
     background: var(--paper);
   }
 
-  .artifact-head {
+  .card-head {
     display: flex;
     justify-content: space-between;
     gap: 12px;
@@ -706,90 +845,95 @@ action: regenerate / review</code></pre>
     color: var(--faint);
   }
 
-  .artifact pre {
+  .card-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+  }
+
+  .card-row:last-child {
+    border-bottom: 0;
+  }
+
+  .card-row .mono {
+    color: var(--signal-text);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-align: right;
+  }
+
+  .note-list {
     margin: 0;
-    padding: 18px 16px;
-    overflow-x: auto;
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.65;
-    color: var(--ink-2);
+    padding: 8px 18px;
+    list-style: none;
   }
 
-  .artifact code {
-    font-family: inherit;
-  }
-
-  .artifact-map {
+  .note-list li {
     display: grid;
-    grid-template-columns: auto 40px minmax(0, 1fr);
-    align-items: center;
-    gap: 0;
-    padding: 18px;
-    border: 0;
-    background: transparent;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+    line-height: 1.45;
   }
 
-  .map-root {
-    padding: 8px 12px;
-    border: 1px solid var(--signal);
+  .note-list li:last-child {
+    border-bottom: 0;
+  }
+
+  .note-list span {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--signal-text);
   }
 
-  .map-lines {
-    height: 1px;
-    background: var(--line-strong);
+  .check-table {
+    margin-top: 26px;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
   }
 
-  .artifact-map ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .artifact-map li {
-    padding: 7px 10px;
-    border: 1px solid var(--line-strong);
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .artifact-list {
-    padding-bottom: 4px;
-  }
-
-  .artifact-list ol {
-    margin: 0;
-    padding: 12px 18px 8px;
-    list-style: none;
-    counter-reset: irv;
-  }
-
-  .artifact-list li {
+  .check-row {
     display: grid;
-    grid-template-columns: 130px minmax(0, 1fr);
-    gap: 12px;
-    padding: 9px 0;
+    grid-template-columns: 0.7fr 1fr 0.7fr 1.2fr;
     border-bottom: 1px solid var(--line);
+  }
+
+  .check-row > span {
+    padding: 12px 14px;
+    border-right: 1px solid var(--line);
     font-size: 14px;
     line-height: 1.4;
   }
 
-  .artifact-list li:last-child {
-    border-bottom: 0;
+  .check-head > span {
+    color: var(--faint);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
 
-  .artifact-list li span {
+  .check-row .ok {
+    color: var(--green);
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  .check-row .warn {
     color: var(--signal-text);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .step-body blockquote {
@@ -813,10 +957,16 @@ action: regenerate / review</code></pre>
     text-transform: uppercase;
   }
 
+  .big-quote {
+    font-size: clamp(28px, 3.4vw, 42px) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.03em;
+  }
+
   .gates {
     display: grid;
     gap: 8px;
-    margin: 22px 0 0;
+    margin: 18px 0 0;
     padding: 0;
     list-style: none;
   }
@@ -830,94 +980,42 @@ action: regenerate / review</code></pre>
     line-height: 1.4;
   }
 
-  .gates .mono {
-    margin-right: 8px;
-    color: var(--signal-text);
-  }
-
-  .qa-cards {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
+  .shot {
     margin-top: 26px;
   }
 
-  .qa-card {
-    padding: 20px;
-    border: 1px solid var(--line-strong);
-    background: var(--paper);
-  }
-
-  .qa-card .mono {
-    color: var(--faint);
-  }
-
-  .qa-value {
-    margin-top: 14px;
-    font-family: var(--serif);
-    font-size: clamp(36px, 5vw, 54px);
-    font-weight: 500;
-    line-height: 0.9;
-    letter-spacing: -0.05em;
-  }
-
-  .qa-card p {
-    margin-top: 8px;
-    color: var(--muted);
-    font-size: 14px;
-  }
-
-  .qa-card-ok {
-    border-top: 3px solid var(--green);
-  }
-
-  .qa-card-ok .qa-value {
-    color: var(--green);
-  }
-
-  .qa-card-stop {
-    border-top: 3px solid var(--signal);
-  }
-
-  .qa-card-stop .qa-value {
-    color: var(--signal-text);
-  }
-
-  .render-shot {
-    margin-top: 26px;
-  }
-
-  .render-shot img {
+  .shot img {
     width: 100%;
     height: auto;
     border: 1px solid var(--ink);
   }
 
-  .render-shot figcaption {
+  .shot figcaption {
     margin-top: 8px;
     color: var(--faint);
   }
 
-  .walk-section {
+  .section {
     padding-block: clamp(64px, 9vw, 124px);
     border-bottom: 1px solid var(--line);
   }
 
-  .walk-section-tint {
+  .section-tint {
     background: var(--paper-2);
   }
 
-  .walk-section-head {
+  .section-head {
+    display: block;
     margin-bottom: clamp(34px, 5vw, 56px);
   }
 
-  .walk-label {
+  .section-label {
     padding-bottom: 12px;
     border-bottom: 1px solid var(--line);
     color: var(--faint);
   }
 
-  .walk-section-head h2 {
+  .section-head h2 {
     max-width: 24ch;
     margin-top: 18px;
     font-family: var(--serif);
@@ -934,7 +1032,7 @@ action: regenerate / review</code></pre>
 
   .ba-row {
     display: grid;
-    grid-template-columns: 0.8fr 1.2fr 1.2fr 1.2fr;
+    grid-template-columns: 0.8fr 1.2fr 1.4fr 1.2fr;
     border-bottom: 1px solid var(--line);
   }
 
@@ -957,7 +1055,7 @@ action: regenerate / review</code></pre>
     font-weight: 560;
   }
 
-  .walk-note {
+  .section-note {
     max-width: 70ch;
     margin-top: 24px;
     color: var(--muted);
@@ -965,21 +1063,27 @@ action: regenerate / review</code></pre>
     line-height: 1.55;
   }
 
-  .limit-grid {
+  .grid-4 {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     border-top: 1px solid var(--line);
     border-left: 1px solid var(--line);
   }
 
-  .limit {
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .cell {
     padding: clamp(22px, 3vw, 34px);
     border-right: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
   }
 
-  .limit h3 {
+  .cell h3 {
     font-family: var(--serif);
     font-size: clamp(22px, 2.4vw, 30px);
     font-weight: 500;
@@ -987,10 +1091,45 @@ action: regenerate / review</code></pre>
     letter-spacing: -0.03em;
   }
 
-  .limit p {
+  .cell p {
     margin-top: 10px;
     color: var(--muted);
     font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .start-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .start-list li {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 20px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .start-num {
+    color: var(--signal-text);
+  }
+
+  .start-list h3 {
+    font-family: var(--serif);
+    font-size: clamp(24px, 2.6vw, 32px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .start-list p {
+    max-width: 56ch;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 15.5px;
     line-height: 1.5;
   }
 
@@ -1061,7 +1200,7 @@ action: regenerate / review</code></pre>
       border-left: 0;
     }
 
-    .walk-step.wrap,
+    .step.wrap,
     .step-grid {
       grid-template-columns: 120px minmax(0, 1fr);
     }
@@ -1089,14 +1228,15 @@ action: regenerate / review</code></pre>
       display: none;
     }
 
-    .limit-grid {
-      grid-template-columns: 1fr;
+    .grid-4,
+    .grid-3 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @media (max-width: 720px) {
     .walk-title {
-      font-size: clamp(38px, 11vw, 60px);
+      font-size: clamp(36px, 10.6vw, 58px);
     }
 
     .walk-strip ol {
@@ -1107,13 +1247,13 @@ action: regenerate / review</code></pre>
       border-left: 0;
     }
 
-    .walk-step.wrap,
+    .step.wrap,
     .step-grid {
       grid-template-columns: 1fr;
       gap: 18px;
     }
 
-    .step-meta {
+    .step-side {
       position: static;
       display: flex;
       align-items: baseline;
@@ -1130,10 +1270,6 @@ action: regenerate / review</code></pre>
 
     .step-roles {
       margin: 0 0 0 auto;
-    }
-
-    .qa-cards {
-      grid-template-columns: 1fr;
     }
 
     .walk-meta {
@@ -1159,8 +1295,25 @@ action: regenerate / review</code></pre>
       text-align: right;
     }
 
+    .check-row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .check-head {
+      display: none;
+    }
+
     .ba-row {
       grid-template-columns: 1fr;
+    }
+
+    .grid-4,
+    .grid-3 {
+      grid-template-columns: 1fr;
+    }
+
+    .start-list li {
+      grid-template-columns: 48px minmax(0, 1fr);
     }
 
     .walk-cta-inner {
