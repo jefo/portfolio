@@ -144,10 +144,10 @@ const range = [
           </h1>
 
           <p class="ops-lede">
-            ИгроЛаба — инженерный журнал о PC-железе на 99 страниц. LLM делает
-            research, narrative и layout; детерминированные гейты и редактор
-            решают, что выходит. Ниже — четыре материала и то, что каждый
-            доказал.
+            ИгроЛаба — инженерный журнал о PC-железе. Под капотом — файловый
+            data warehouse: 17k наблюдений, 176 dimensions, lineage и confidence.
+            Система отличает измеренное от спроецированного; LLM делает research,
+            narrative и layout, а гейты и редактор решают, что выходит.
           </p>
 
           <dl class="ops-meta">
@@ -172,6 +172,9 @@ const range = [
           <div class="ops-actions">
             <a class="ops-button" href="https://pekaboyare.ru" target="_blank" rel="noopener noreferrer">
               Открыть журнал <span aria-hidden="true">↗</span>
+            </a>
+            <a class="ops-button ops-button-ghost" href={`${base}cases/igrolab/walkthrough/`}>
+              Смотреть walkthrough <span aria-hidden="true">→</span>
             </a>
             <a class="ops-text-link mono" href="https://github.com/kaizin-lab/pc_hardware_knowledge_base" target="_blank" rel="noopener noreferrer">
               база знаний <span aria-hidden="true">↗</span>
@@ -221,6 +224,12 @@ const range = [
             </li>
           ))}
         </ol>
+
+        <p class="flow-next">
+          <a class="material-link mono" href={`${base}cases/igrolab/walkthrough/`}>
+            полный цикл на одном материале <span aria-hidden="true">→</span>
+          </a>
+        </p>
       </section>
 
       <section class="ops-section ops-section-tint" aria-labelledby="materials">
@@ -625,6 +634,18 @@ action:   rebuild Tradeoff + Anchor</code></pre>
   .ops-button:hover {
     background: var(--signal-text);
     color: var(--paper);
+  }
+
+  .ops-button-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+  }
+
+  .ops-button-ghost:hover {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
   }
 
   .ops-text-link {
