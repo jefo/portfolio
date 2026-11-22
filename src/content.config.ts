@@ -15,7 +15,12 @@ const projects = defineCollection({
     stack: z.array(z.string()),
     tests: z.string().optional(),
     repo: z.url().optional(),
-    caseUrl: z.url().optional(),
+    caseUrl: z
+      .string()
+      .refine((value) => value.startsWith("/") || /^https?:\/\//.test(value), {
+        message: "caseUrl must be an absolute URL or a site-relative path",
+      })
+      .optional(),
     cover: z.string().optional(),
     coverType: z.enum(["phone", "wide"]).default("phone"),
     accent: z.enum(["signal", "blue", "green"]).default("signal"),

@@ -39,6 +39,7 @@ src/
 ├── data/site.ts         имя, контакты, услуги, процесс
 ├── layouts/BaseLayout.astro
 ├── pages/index.astro
+├── pages/cases/         отдельные разборы проектов
 └── styles/global.css    токены, типографика, движение
 ```
 
@@ -58,7 +59,7 @@ status: "библиотека · 8 тестов"
 stack: ["TypeScript", "Bun", "Zod", "SotaJS"]
 tests: "8 тестов"         # необязательно; если есть, заменяет status в подвале
 repo: "https://github.com/jefo/booking-domain"
-caseUrl: "https://jefo.github.io/booking-domain/"
+caseUrl: "https://jefo.github.io/booking-domain/"  # или /cases/<slug>/
 cover: "shots/booking-domain.png"   # необязательно
 coverType: wide           # phone | wide
 accent: green             # signal | blue | green

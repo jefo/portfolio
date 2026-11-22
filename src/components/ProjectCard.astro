@@ -12,6 +12,9 @@ const { data } = project;
 const base = import.meta.env.BASE_URL;
 const number = String(index + 1).padStart(2, "0");
 const cover = data.cover ? `${base}${data.cover.replace(/^\//, "")}` : null;
+const caseHref = data.caseUrl?.startsWith("/")
+  ? `${base}${data.caseUrl.replace(/^\//, "")}`
+  : data.caseUrl;
 const categoryLabel = data.category === "bot" ? "Бот" : data.category === "engine" ? "Движок" : "Домен";
 ---
 
@@ -21,7 +24,7 @@ const categoryLabel = data.category === "bot" ? "Бот" : data.category === "en
   data-project
   data-category={data.category}
 >
-  <a class="project-main" href={data.caseUrl}>
+  <a class="project-main" href={caseHref}>
     <div class="cover">
       <div class="cover-meta">
         <span>{data.kind}</span>
@@ -65,7 +68,7 @@ const categoryLabel = data.category === "bot" ? "Бот" : data.category === "en
       {data.repo && (
         <a href={data.repo} target="_blank" rel="noopener noreferrer">код <span aria-hidden="true">↗</span></a>
       )}
-      {data.caseUrl && <a href={data.caseUrl}>разбор <span aria-hidden="true">↗</span></a>}
+      {caseHref && <a href={caseHref}>разбор <span aria-hidden="true">↗</span></a>}
       {!data.repo && !data.caseUrl && <span class="project-closed">код закрыт</span>}
     </div>
   </div>

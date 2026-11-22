@@ -1,0 +1,1179 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { site } from "../../data/site";
+
+const base = import.meta.env.BASE_URL;
+const img = (name: string) => `${base}shots/tg-paywall/${name}`;
+const repo = "https://github.com/jefo/sotajs/tree/main/examples/tg-paywall";
+const mailto = `mailto:${site.email}?subject=${encodeURIComponent("Похожий сценарий: платная подписка")}`;
+
+const flow = [
+  {
+    state: "plan",
+    title: "Тариф",
+    text: "Админ создаёт план: цена, срок, канал. План — агрегат с инвариантами, а не строка в меню.",
+  },
+  {
+    state: "pending",
+    title: "Подписка",
+    text: "Пользователь выбирает план. Создаётся Subscription в состоянии pending и ссылка на оплату.",
+  },
+  {
+    state: "pay",
+    title: "Оплата",
+    text: "Платёжный адаптер возвращает счёт или ссылку. Провайдер спрятан за портом.",
+  },
+  {
+    state: "active",
+    title: "Подтверждение",
+    text: "Вебхук или демо-шлюз подтверждает платёж. Подписка переходит в active, появляется AccessGrant.",
+  },
+  {
+    state: "join",
+    title: "Доступ",
+    text: "Заявка на вступление одобряется только при активной подписке. Ссылку нельзя переслать и обойти.",
+  },
+  {
+    state: "expired",
+    title: "Истечение",
+    text: "Команда revokeExpiredSubscriptionsCommand находит просроченные подписки, отзывает AccessGrant и снимает доступ через banChatMember. Запуск — по cron или вручную.",
+  },
+];
+
+const features = [
+  {
+    kicker: "01 / payments",
+    title: "Пять адаптеров и Telegram Stars",
+    text: "Stripe, ЮKassa, Robokassa, Prodamus и mock. Отдельный адаптер Telegram Stars. Один порт, разные протоколы и подписи вебхуков.",
+  },
+  {
+    kicker: "02 / access",
+    title: "Доступ по заявке",
+    text: "Не обычная invite-ссылка, а join request: бот проверяет активную подписку в базе и только потом одобряет вход.",
+  },
+  {
+    kicker: "03 / lifecycle",
+    title: "Истечение по сроку",
+    text: "Команда для cron или ручного запуска: находит подписки с истёкшим сроком, отзывает AccessGrant и снимает доступ из канала через banChatMember.",
+  },
+  {
+    kicker: "04 / content",
+    title: "Редактор шаблонов",
+    text: "Админ меняет тексты из бота. Плейсхолдеры вроде {{expiresAt}} подставляются в момент отправки, HTML разрешён.",
+  },
+  {
+    kicker: "05 / checkout",
+    title: "Оплата в Mini App",
+    text: "Демо-шлюз открывается внутри Telegram: выбор плана, карточка, успешная оплата и возврат в бота.",
+  },
+  {
+    kicker: "06 / admin",
+    title: "Админский контур",
+    text: "Создание плана, готовая ссылка, рекламный пост и список активных подписок — без отдельной панели.",
+  },
+];
+
+const numbers = [
+  { value: "4", label: "доменных теста", note: "18 assertions" },
+  { value: "5 + 1", label: "платёжный адаптер", note: "плюс Telegram Stars" },
+  { value: "7 + 5", label: "commands + queries", note: "CQRS" },
+  { value: "17", label: "адаптеров", note: "SQLite, Postgres, Telegram" },
+];
+
+const limits = [
+  {
+    title: "Демо-платежи",
+    text: "По умолчанию работает mock-провайдер и локальный шлюз. Боевые ключи, подписи и вебхуки подключаются через адаптеры, но не входят в демо.",
+  },
+  {
+    title: "Четыре теста",
+    text: "Тесты покрывают доменный сценарий подписки: создание, оплату, истечение и ручной отзыв. End-to-end через Telegram API не автоматизирован.",
+  },
+  {
+    title: "Планировщик",
+    text: "Команда истечения есть, но cron в поставку не входит: её нужно повесить на планировщик или вызывать вручную.",
+  },
+  {
+    title: "Только Telegram",
+    text: "AccessGrant уже описывает ресурс и тип, но Discord, веб-портал и бандлы — это следующий слой, а не текущая поставка.",
+  },
+  {
+    title: "Хранилище",
+    text: "По умолчанию нужен Postgres; без DATABASE_URL сервис работает без состояния. SQLite включается через DATABASE_TYPE=sqlite и SQLITE_PATH.",
+  },
+  {
+    title: "Без метрик",
+    text: "Это инфраструктура и демо-стенд, а не боевая инсталляция. Конверсии, выручки и числа подписчиков здесь нет.",
+  },
+];
+---
+
+<BaseLayout
+  title="TG Paywall — кейс: платная подписка на Telegram-канал"
+  description="Разбор TG Paywall: жизненный цикл подписки, доступ по заявке, авто-истечение, шесть платёжных адаптеров и оплата в Mini App."
+>
+  <Header />
+
+  <main id="main">
+    <article class="case">
+      <header class="case-hero">
+        <div class="wrap case-hero-inner">
+          <a class="case-back mono" href={`${base}#projects`}>
+            <span aria-hidden="true">←</span> все проекты
+          </a>
+
+          <div class="case-kicker mono">
+            <span>Кейс / Telegram</span>
+            <span>2026</span>
+          </div>
+
+          <h1 class="case-title">
+            Платный доступ,<br />
+            который закрывается сам.
+          </h1>
+
+          <p class="case-lede">
+            TG Paywall — open-source инфраструктура подписки на закрытый канал.
+            Бот принимает оплату, выдаёт доступ через заявку и снимает его,
+            когда срок закончился. Типичный заказ для ботодела, собранный как
+            домен, а не как набор обработчиков.
+          </p>
+
+          <dl class="case-meta">
+            <div>
+              <dt>Роль</dt>
+              <dd>Архитектура, домен, бот, TMA-демо</dd>
+            </div>
+            <div>
+              <dt>Стек</dt>
+              <dd>TypeScript · Bun · grammY · SQLite / Postgres</dd>
+            </div>
+            <div>
+              <dt>Статус</dt>
+              <dd>Open source · демо-платежи</dd>
+            </div>
+            <div>
+              <dt>Лицензия</dt>
+              <dd>MIT</dd>
+            </div>
+          </dl>
+
+          <div class="case-actions">
+            <a class="case-button" href={repo} target="_blank" rel="noopener noreferrer">
+              Смотреть код <span aria-hidden="true">↗</span>
+            </a>
+            <a class="case-text-link mono" href={mailto}>
+              обсудить похожий сценарий <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <div class="case-hero-shot">
+        <div class="wrap">
+          <figure class="hero-figure">
+            <img
+              src={img("02-plans.jpg")}
+              alt="Экран выбора тарифа в Telegram: Career Accelerator за 2990 рублей и Lifetime Legend за 14990 рублей"
+              width="576"
+              height="1280"
+              loading="eager"
+              decoding="async"
+            />
+            <figcaption class="mono">
+              Демо-бот: два формата участия, оплата внутри Telegram
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <section class="case-section wrap" aria-labelledby="task">
+        <div class="case-section-head">
+          <p class="mono case-label">01 / задача</p>
+          <h2 id="task">Подписка — это не кнопка «Оплатить».</h2>
+        </div>
+
+        <div class="task-grid">
+          <blockquote class="task-quote">
+            «Оплатил» — начало работы. Настоящая задача — удержать вместе
+            состояние, срок и доступ, когда человек уже ушёл из бота.
+          </blockquote>
+
+          <div class="task-copy">
+            <p>
+              Эксперт продаёт доступ в закрытый канал. В ручном режиме нужно
+              проверять чеки, добавлять людей, помнить даты и удалять тех, у
+              кого подписка закончилась.
+            </p>
+            <p>
+              Ошибка в любую сторону стоит денег: пустил без оплаты — потерял
+              выручку; забыл удалить — потерял контроль над контентом.
+            </p>
+            <p>
+              Поэтому сценарий заканчивается не сообщением «оплачено», а
+              состоянием <code>active</code> и записью <code>AccessGrant</code>,
+              которую потом можно отозвать.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section case-section-tint" aria-labelledby="flow">
+        <div class="wrap">
+          <div class="case-section-head">
+            <p class="mono case-label">02 / сценарий</p>
+            <h2 id="flow">Шесть шагов от тарифа до удаления.</h2>
+          </div>
+
+          <ol class="flow-list">
+            {flow.map((step, index) => (
+              <li class="flow-step">
+                <div class="flow-top">
+                  <span class="flow-num mono">{String(index + 1).padStart(2, "0")}</span>
+                  <code class="flow-state">{step.state}</code>
+                </div>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section class="case-section wrap" aria-labelledby="inside">
+        <div class="case-section-head">
+          <p class="mono case-label">03 / что внутри</p>
+          <h2 id="inside">Не бот с кнопками, а инфраструктура доступа.</h2>
+        </div>
+
+        <div class="feature-grid">
+          {features.map((feature) => (
+            <article class="feature">
+              <p class="mono feature-kicker">{feature.kicker}</p>
+              <h3>{feature.title}</h3>
+              <p>{feature.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="case-section case-section-ink" aria-labelledby="architecture">
+        <div class="wrap">
+          <div class="case-section-head">
+            <p class="mono case-label">04 / архитектура</p>
+            <h2 id="architecture">Домен не знает, что такое Telegram.</h2>
+          </div>
+
+          <p class="arch-lede">
+            Порты и адаптеры: платёжный провайдер, база и Telegram подключаются
+            снаружи. Внутри — агрегаты с инвариантами и use cases, которые
+            можно проверить без сети.
+          </p>
+
+          <div class="arch-diagram" aria-label="Слои архитектуры">
+            <div class="arch-row">
+              <p class="arch-label mono">driving</p>
+              <div class="arch-items">
+                <span>grammY bot</span>
+                <span>webhook server</span>
+                <span>TMA demo</span>
+              </div>
+            </div>
+            <div class="arch-row">
+              <p class="arch-label mono">application</p>
+              <div class="arch-items">
+                <span>7 commands</span>
+                <span>5 queries</span>
+                <span>7 features</span>
+              </div>
+            </div>
+            <div class="arch-row arch-row-domain">
+              <p class="arch-label mono">domain</p>
+              <div class="arch-items">
+                <span>Plan</span>
+                <span>Subscription</span>
+                <span>AccessGrant</span>
+              </div>
+            </div>
+            <div class="arch-row">
+              <p class="arch-label mono">driven</p>
+              <div class="arch-items">
+                <span>SQLite</span>
+                <span>Postgres</span>
+                <span>Telegram API</span>
+                <span>payments</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-notes">
+            <div>
+              <h3>Смена платежки — одна строка</h3>
+              <p>
+                Провайдер выбирается в composition root. Домен и сценарий
+                подписки остаются прежними, меняется только адаптер.
+              </p>
+            </div>
+            <div>
+              <h3>Тесты без базы и сети</h3>
+              <p>
+                Доменный сценарий проверяется на in-memory адаптерах: создать
+                план, оплатить, дождаться истечения, отозвать доступ.
+              </p>
+            </div>
+            <div>
+              <h3>Доступ как сущность</h3>
+              <p>
+                <code>AccessGrant</code> связывает пользователя, ресурс и
+                подписку. Поэтому доступ можно выдавать, отзывать и расширять
+                на несколько ресурсов.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section wrap" aria-labelledby="screens">
+        <div class="case-section-head">
+          <p class="mono case-label">05 / экраны</p>
+          <h2 id="screens">Путь от приветствия до активной подписки.</h2>
+        </div>
+
+        <div class="screen-grid">
+          <figure class="screen">
+            <img
+              src={img("01-welcome.jpg")}
+              alt="Приветствие бота с кнопками Premium Membership, Участие (Legacy) и Мой статус"
+              width="576"
+              height="1280"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <span class="mono">01</span>
+              Вход: приветствие, форматы участия и статус.
+            </figcaption>
+          </figure>
+
+          <figure class="screen">
+            <img
+              src={img("03-tma.jpg")}
+              alt="Оплата в Telegram Mini App: два тарифа и кнопка Продолжить за 2990 рублей"
+              width="576"
+              height="1280"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <span class="mono">02</span>
+              Checkout в Mini App, без перехода в браузер.
+            </figcaption>
+          </figure>
+
+          <figure class="screen">
+            <img
+              src={img("05-active.jpg")}
+              alt="Сообщение об успешной оплате: доступ активирован до 29 апреля 2026 и кнопка Вступить в канал"
+              width="576"
+              height="1280"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <span class="mono">03</span>
+              Подписка активна, доступ выдан до конкретной даты.
+            </figcaption>
+          </figure>
+
+          <figure class="screen">
+            <img
+              src={img("06-template.jpg")}
+              alt="Редактор шаблона payment_confirmed в боте: текущий текст с переменной expiresAt и инструкция"
+              width="576"
+              height="1280"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>
+              <span class="mono">04</span>
+              Админ правит текст сообщения прямо в боте.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="case-section case-section-tint" aria-labelledby="facts">
+        <div class="wrap">
+          <div class="case-section-head">
+            <p class="mono case-label">06 / что проверяемо</p>
+            <h2 id="facts">Цифры из репозитория, не из презентации.</h2>
+          </div>
+
+          <div class="numbers">
+            {numbers.map((number) => (
+              <div class="number">
+                <p class="number-value">{number.value}</p>
+                <p class="number-label">{number.label}</p>
+                <p class="number-note mono">{number.note}</p>
+              </div>
+            ))}
+          </div>
+
+          <ul class="check-list">
+            <li>Доменные тесты запускаются командой <code>bun test</code> на in-memory адаптерах.</li>
+            <li>Сценарий не зависит от хранилища: есть адаптеры SQLite и Postgres.</li>
+            <li>Вебхуки пяти провайдеров сведены к одному use case подтверждения оплаты; Telegram Stars — отдельный адаптер.</li>
+            <li>Шаблоны сообщений хранятся в базе и переопределяются без деплоя.</li>
+            <li>В репозитории есть README, быстрый старт и схема архитектуры.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="case-section wrap" aria-labelledby="limits">
+        <div class="case-section-head">
+          <p class="mono case-label">07 / границы</p>
+          <h2 id="limits">Что этот кейс не обещает.</h2>
+        </div>
+
+        <div class="limit-grid">
+          {limits.map((limit) => (
+            <article class="limit">
+              <h3>{limit.title}</h3>
+              <p>{limit.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="case-cta">
+        <div class="wrap case-cta-inner">
+          <div>
+            <p class="mono case-label">Дальше</p>
+            <h2>Нужен платный доступ, подписка или похожий жизненный цикл?</h2>
+          </div>
+          <div class="case-cta-actions">
+            <a class="case-button case-button-light" href={mailto}>
+              Написать <span aria-hidden="true">↗</span>
+            </a>
+            <a class="case-text-link mono" href={repo} target="_blank" rel="noopener noreferrer">
+              открыть репозиторий <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .case {
+    --case-gutter: clamp(20px, 4vw, 56px);
+  }
+
+  .case-hero {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .case-hero-inner {
+    padding-block: clamp(28px, 4vw, 56px) clamp(40px, 6vw, 76px);
+  }
+
+  .case-back {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: clamp(40px, 6vw, 72px);
+    color: var(--muted);
+    transition: color 160ms var(--ease);
+  }
+
+  .case-back:hover {
+    color: var(--signal-text);
+  }
+
+  .case-kicker {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--faint);
+  }
+
+  .case-title {
+    max-width: 15ch;
+    margin-top: clamp(26px, 4vw, 44px);
+    font-family: var(--serif);
+    font-size: clamp(48px, 8.2vw, 112px);
+    font-weight: 500;
+    line-height: 0.92;
+    letter-spacing: -0.05em;
+  }
+
+  .case-lede {
+    max-width: 58ch;
+    margin-top: clamp(26px, 3.5vw, 40px);
+    color: var(--ink-2);
+    font-size: clamp(17px, 1.7vw, 21px);
+    line-height: 1.45;
+  }
+
+  .case-meta {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: clamp(40px, 5vw, 64px);
+    border-top: 1px solid var(--line);
+  }
+
+  .case-meta div {
+    padding: 14px 18px 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .case-meta div:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .case-meta dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .case-meta dd {
+    margin-top: 6px;
+    color: var(--ink-2);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .case-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 28px;
+    margin-top: 30px;
+  }
+
+  .case-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    transition: background 180ms var(--ease), color 180ms var(--ease);
+  }
+
+  .case-button:hover {
+    background: var(--signal-text);
+    color: var(--paper);
+  }
+
+  .case-text-link {
+    color: var(--muted);
+    transition: color 160ms var(--ease);
+  }
+
+  .case-text-link:hover {
+    color: var(--signal-text);
+  }
+
+  .case-hero-shot {
+    padding-block: clamp(36px, 5vw, 64px);
+    background: var(--tint-signal);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hero-figure {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+  }
+
+  .hero-figure img {
+    width: auto;
+    max-height: min(72vh, 760px);
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+
+  .hero-figure figcaption {
+    color: var(--muted);
+  }
+
+  .case-section {
+    padding-block: clamp(64px, 9vw, 124px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .case-section-tint {
+    background: var(--paper-2);
+  }
+
+  .case-section-ink {
+    background: var(--ink);
+    color: var(--paper);
+    border-bottom: 0;
+  }
+
+  .case-section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 20px 48px;
+    margin-bottom: clamp(36px, 5vw, 64px);
+  }
+
+  .case-label {
+    grid-column: 1 / -1;
+    padding-bottom: 12px;
+    border-bottom: 1px solid currentColor;
+    color: var(--faint);
+  }
+
+  .case-section-ink .case-label {
+    color: oklch(0.64 0.01 82);
+    border-color: oklch(0.33 0.012 75);
+  }
+
+  .case-section-head h2 {
+    max-width: 24ch;
+    font-family: var(--serif);
+    font-size: clamp(34px, 6.4vw, 68px);
+    font-weight: 500;
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+  }
+
+  .task-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: clamp(36px, 6vw, 90px);
+    align-items: start;
+  }
+
+  .task-quote {
+    max-width: 24ch;
+    font-family: var(--serif);
+    font-size: clamp(28px, 3.4vw, 44px);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+  }
+
+  .task-copy {
+    display: grid;
+    gap: 16px;
+    max-width: 54ch;
+    color: var(--muted);
+    font-size: 16.5px;
+    line-height: 1.55;
+  }
+
+  .task-copy code,
+  .arch-notes code,
+  .check-list code {
+    font-family: var(--mono);
+    font-size: 0.9em;
+    color: var(--ink-2);
+  }
+
+  .flow-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .flow-step {
+    padding: 18px 22px 28px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .flow-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+
+  .flow-num {
+    color: var(--signal-text);
+  }
+
+  .flow-state {
+    padding: 3px 7px;
+    border: 1px solid var(--line-strong);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+
+  .flow-step h3 {
+    font-family: var(--serif);
+    font-size: clamp(23px, 2.4vw, 30px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .flow-step p {
+    margin-top: 10px;
+    max-width: 34ch;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .feature {
+    padding: clamp(22px, 3vw, 34px);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .feature-kicker {
+    color: var(--signal-text);
+  }
+
+  .feature h3 {
+    margin-top: 22px;
+    font-family: var(--serif);
+    font-size: clamp(24px, 2.5vw, 32px);
+    font-weight: 500;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+  }
+
+  .feature p:last-child {
+    margin-top: 10px;
+    max-width: 42ch;
+    color: var(--muted);
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
+  .arch-lede {
+    max-width: 60ch;
+    margin-bottom: clamp(32px, 4vw, 52px);
+    color: oklch(0.8 0.01 86);
+    font-size: 17px;
+    line-height: 1.55;
+  }
+
+  .arch-diagram {
+    border-top: 1px solid oklch(0.33 0.012 75);
+  }
+
+  .arch-row {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 24px;
+    align-items: baseline;
+    padding: 18px 0;
+    border-bottom: 1px solid oklch(0.33 0.012 75);
+  }
+
+  .arch-label {
+    color: oklch(0.64 0.01 82);
+  }
+
+  .arch-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+
+  .arch-items span {
+    padding: 5px 9px;
+    border: 1px solid oklch(0.38 0.012 75);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: oklch(0.86 0.008 86);
+  }
+
+  .arch-row-domain .arch-items span {
+    border-color: var(--signal);
+    color: oklch(0.82 0.12 40);
+  }
+
+  .arch-notes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 40px;
+    margin-top: clamp(36px, 5vw, 56px);
+  }
+
+  .arch-notes h3 {
+    font-family: var(--serif);
+    font-size: 23px;
+    font-weight: 500;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+  }
+
+  .arch-notes p {
+    margin-top: 10px;
+    color: oklch(0.76 0.01 86);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .arch-notes code {
+    color: oklch(0.88 0.008 86);
+  }
+
+  .screen-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(16px, 2vw, 28px);
+    align-items: start;
+  }
+
+  .screen {
+    display: grid;
+    gap: 12px;
+  }
+
+  .screen img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line-strong);
+    background: var(--paper-2);
+    filter: grayscale(1) contrast(1.02);
+    transition: filter 400ms var(--ease);
+  }
+
+  .screen:hover img {
+    filter: none;
+  }
+
+  .screen figcaption {
+    display: grid;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.4;
+  }
+
+  .screen figcaption .mono {
+    color: var(--signal-text);
+  }
+
+  .numbers {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+  }
+
+  .number {
+    padding: 16px 20px 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .number:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .number-value {
+    font-family: var(--serif);
+    font-size: clamp(38px, 4.4vw, 58px);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+
+  .number-label {
+    margin-top: 8px;
+    color: var(--ink-2);
+    font-size: 14px;
+  }
+
+  .number-note {
+    margin-top: 4px;
+    color: var(--faint);
+  }
+
+  .check-list {
+    display: grid;
+    gap: 0;
+    margin: clamp(34px, 4vw, 52px) 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .check-list li {
+    position: relative;
+    padding: 13px 0 13px 26px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
+  .check-list li::before {
+    content: "";
+    position: absolute;
+    top: 21px;
+    left: 2px;
+    width: 7px;
+    height: 7px;
+    background: var(--signal);
+  }
+
+  .limit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .limit {
+    padding: clamp(22px, 3vw, 34px);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .limit h3 {
+    font-family: var(--serif);
+    font-size: clamp(23px, 2.4vw, 30px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .limit p {
+    max-width: 44ch;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
+  .case-cta {
+    background: var(--paper-2);
+    border-top: 1px solid var(--line);
+  }
+
+  .case-cta-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) auto;
+    gap: 32px 64px;
+    align-items: end;
+    padding-block: clamp(56px, 8vw, 100px);
+  }
+
+  .case-cta h2 {
+    max-width: 26ch;
+    margin-top: 18px;
+    font-family: var(--serif);
+    font-size: clamp(34px, 4.6vw, 58px);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+  }
+
+  .case-cta-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .case-button-light {
+    background: var(--signal-text);
+  }
+
+  .case-button-light:hover {
+    background: var(--ink);
+  }
+
+  @media (max-width: 980px) {
+    .case-meta {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .case-meta div:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .case-meta div:nth-child(n + 3) {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .task-grid {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    .flow-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .arch-notes {
+      grid-template-columns: 1fr;
+      gap: 22px;
+    }
+
+    .screen-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px 20px;
+    }
+
+    .numbers {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .number:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .number:nth-child(n + 3) {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 720px) {
+    .case-section-head {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .case-title {
+      font-size: clamp(44px, 12vw, 64px);
+    }
+
+    .case-meta {
+      grid-template-columns: 1fr;
+    }
+
+    .case-meta div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 11px 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .case-meta div:first-child {
+      border-top: 0;
+    }
+
+    .case-meta div:nth-child(n + 3) {
+      margin-top: 0;
+      padding-top: 11px;
+    }
+
+    .case-meta dd {
+      margin: 0;
+      text-align: right;
+    }
+
+    .flow-list {
+      grid-template-columns: 1fr;
+    }
+
+    .feature-grid,
+    .limit-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .arch-row {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .screen-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px 14px;
+    }
+
+    .screen figcaption {
+      font-size: 13px;
+    }
+
+    .case-cta-inner {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+  }
+
+  @media (max-width: 440px) {
+    .screen-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .numbers {
+      grid-template-columns: 1fr;
+    }
+
+    .number {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 0;
+      padding: 12px 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .number:first-child {
+      border-top: 0;
+    }
+
+    .number:nth-child(n + 3) {
+      margin-top: 0;
+      padding-top: 12px;
+    }
+
+    .number-label,
+    .number-note {
+      margin: 0;
+      text-align: right;
+    }
+
+    .number-value {
+      font-size: 34px;
+    }
+  }
+</style>
