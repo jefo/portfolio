@@ -1,0 +1,1328 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { site } from "../../data/site";
+
+const base = import.meta.env.BASE_URL;
+const img = (name: string) => `${base}shots/${name}`;
+const mailto = `mailto:${site.email}?subject=${encodeURIComponent("AI Content Ops: похожий контур")}`;
+
+const steps = [
+  {
+    n: "01",
+    title: "KB-карточка",
+    text: "Факты, цена, дата проверки, профили поведения. Один компонент — один файл.",
+  },
+  {
+    n: "02",
+    title: "Narrative Arc",
+    text: "Problem → Design Space → Decision → Consequences → Tradeoff. Не outline, а карта трансформации.",
+  },
+  {
+    n: "03",
+    title: "QA",
+    text: "Фактчекер и структурный аудитор параллельно. Выход — fix manifest, а не «наверное, норм».",
+  },
+  {
+    n: "04",
+    title: "Writer’s Brief",
+    text: "Детерминированная компиляция арки в бриф: что читатель думает, что должен узнать, чем закрыть.",
+  },
+  {
+    n: "05",
+    title: "Prose + Astro",
+    text: "Редактор пишет голос. Компоненты и данные собирают страницу.",
+  },
+  {
+    n: "06",
+    title: "Design",
+    text: "Эпистемические цвета, жанровые карточки, телеметрия. Дизайн показывает достоверность.",
+  },
+];
+
+const ledger = [
+  {
+    material: "Core Ultra 5 225F",
+    checked: "52 факта, 6 структурных проверок",
+    found: "0 ошибок, 0 противоречий",
+    decision: "Опубликовано",
+    tone: "ok",
+  },
+  {
+    material: "Ryzen 7 9800X3D",
+    checked: "TJmax, N4/N4P, зависимые propositions",
+    found: "89 → 95 °C, N4 → N4P, каскад",
+    decision: "Каскадный фикс",
+    tone: "warn",
+  },
+  {
+    material: "Ryzen 9 9950X",
+    checked: "27 фактов, 7 структурных проверок",
+    found: "1 FAIL, 2 CRITICAL, 4 HIGH, 6 MEDIUM",
+    decision: "Не опубликовано",
+    tone: "stop",
+  },
+  {
+    material: "RTX 5060 Ti 16GB",
+    checked: "16 утверждений, 2+ источника",
+    found: "6 WARN, 0 BLOCK",
+    decision: "Опубликовано",
+    tone: "ok",
+  },
+];
+
+const limits = [
+  {
+    title: "G1 не enforced",
+    text: "Канонический 9800X3D имеет external_audit_verification: planned. В KB — 10 passed, 14 planned, у 99 карточек поля нет. Формальный гейт есть в методе, но не на всех записях.",
+  },
+  {
+    title: "Нет cycle time",
+    text: "Я не считал время и стоимость одного материала. Это первый управленческий показатель, который я бы поставил на таком контуре.",
+  },
+  {
+    title: "Нет лаборатории",
+    text: "FPS — из открытых источников. «Measured» часто значит «взято из обзора», а не «измерено на стенде».",
+  },
+  {
+    title: "Нет prose QA",
+    text: "Факты и арка проверяются, финальный тон и ссылки — нет. Это зафиксировано в собственном dependency graph.",
+  },
+  {
+    title: "Нет CI у сайта",
+    text: "Сборка проходит, но регрессии ловятся глазами. Для инженерного контента это слабое место.",
+  },
+  {
+    title: "Голос — человек",
+    text: "LLM даёт скелет, фактуру и вёрстку. Живой текст появляется после редактуры. Это не баг, это граница.",
+  },
+];
+
+const range = [
+  {
+    kicker: "Longread / 8 stages",
+    title: "Frametime",
+    text: "7,5 тыс. слов пакета → 3,1 тыс. слов статьи. Recognition → Dissonance → Metaphor → Inversion → Tutorial → Investigation → Heuristics → Full Circle. Интерактивный метроном как якорь.",
+    image: "igrolab-frametime.png",
+    href: "https://pekaboyare.ru/articles/how-frametime-works/",
+    link: "Читать лонгрид",
+  },
+  {
+    kicker: "Case / 8 moves",
+    title: "Oasis Node",
+    text: "Инженерный кейс: expose → destabilize → false-intuition → reframe → system-expand → forensic-validate → identity-synthesize → extract. Каждый move меняет perception, а не добавляет абзац.",
+    image: "igrolab-oasis.png",
+    href: "https://pekaboyare.ru/builds/silent-llm-workstation",
+    link: "Смотреть кейс",
+  },
+];
+---
+
+<BaseLayout
+  title="ИгроЛаба — кейс AI Content Ops"
+  description="AI Content Ops на примере инженерного журнала: 225F — 52/52 факта, 9800X3D — самокоррекция, 9950X — QA остановил публикацию, RTX 5060 Ti — провенанс на странице."
+>
+  <Header />
+
+  <main id="main">
+    <article class="ops">
+      <header class="ops-hero">
+        <div class="wrap ops-hero-inner">
+          <a class="ops-back mono" href={`${base}#projects`}>
+            <span aria-hidden="true">←</span> все проекты
+          </a>
+
+          <div class="ops-kicker mono">
+            <span>Кейс / AI Content Ops</span>
+            <span>2026</span>
+          </div>
+
+          <h1 class="ops-title">
+            Контент, который нельзя<br />
+            опубликовать без доказательств.
+          </h1>
+
+          <p class="ops-lede">
+            ИгроЛаба — инженерный журнал о PC-железе на 99 страниц. LLM делает
+            research, narrative и layout; детерминированные гейты и редактор
+            решают, что выходит. Ниже — четыре материала и то, что каждый
+            доказал.
+          </p>
+
+          <dl class="ops-meta">
+            <div>
+              <dt>Роль</dt>
+              <dd>Методология, пайплайн, редактура, дизайн</dd>
+            </div>
+            <div>
+              <dt>Стек</dt>
+              <dd>Astro 6 · Svelte 5 · Python · YAML · LLM</dd>
+            </div>
+            <div>
+              <dt>Статус</dt>
+              <dd>Live · 99 страниц</dd>
+            </div>
+            <div>
+              <dt>Артефакты</dt>
+              <dd>20 arc maps · 4 QA-отчёта</dd>
+            </div>
+          </dl>
+
+          <div class="ops-actions">
+            <a class="ops-button" href="https://pekaboyare.ru" target="_blank" rel="noopener noreferrer">
+              Открыть журнал <span aria-hidden="true">↗</span>
+            </a>
+            <a class="ops-text-link mono" href="https://github.com/kaizin-lab/pc_hardware_knowledge_base" target="_blank" rel="noopener noreferrer">
+              база знаний <span aria-hidden="true">↗</span>
+            </a>
+            <a class="ops-text-link mono" href="https://github.com/jefo/pc-build-ontology" target="_blank" rel="noopener noreferrer">
+              валидатор сборок <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <div class="ops-hero-shot">
+        <div class="wrap">
+          <figure class="hero-figure">
+            <img
+              src={img("igrolab-issue.png")}
+              alt="Обложка первого выпуска ИгроЛабы: тёмный индустриальный интерфейс, заголовок «ФРЕЙМТАЙМ»"
+              width="1440"
+              height="900"
+              loading="eager"
+            />
+            <figcaption class="mono">
+              Выпуск №001 · журнальная модель, пять жанров, 99 страниц
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <section class="ops-section wrap" aria-labelledby="pipeline">
+        <div class="ops-section-head">
+          <div class="ops-label mono">01 / pipeline</div>
+          <h2 id="pipeline">Один материал — шесть артефактов.</h2>
+          <p class="ops-section-note">
+            Каждый шаг оставляет файл. Поэтому можно проверить не только
+            результат, но и путь.
+          </p>
+        </div>
+
+        <ol class="flow-list">
+          {steps.map((step) => (
+            <li class="flow-step">
+              <div class="flow-top">
+                <span class="flow-num mono">{step.n}</span>
+              </div>
+              <h3>{step.title}</h3>
+              <p>{step.text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section class="ops-section ops-section-tint" aria-labelledby="materials">
+        <div class="wrap">
+          <div class="ops-section-head">
+            <div class="ops-label mono">02 / materials</div>
+            <h2 id="materials">Четыре материала, четыре доказательства.</h2>
+            <p class="ops-section-note">
+              Не «мы используем AI», а что конкретно произошло с конкретным
+              текстом.
+            </p>
+          </div>
+
+          <article class="material">
+            <div class="material-copy">
+              <div class="material-kicker mono">01 / clean pass</div>
+              <h3>Core Ultra 5 225F</h3>
+              <p>
+                Обзор процессора и сборки на LGA1851. Тезис: 225F — не
+                финальный CPU, а ключ к платформе. QA подтвердил все 52
+                утверждения, структурный аудитор не нашёл противоречий.
+              </p>
+              <blockquote>
+                «225F покупают не ради самого процессора, а ради доступа к
+                PCIe 5.0 ×20, DDR5 и апгрейд-потенциалу LGA1851 — это
+                временный жилец сокета на 1–2 года.»
+                <cite>Writer’s Brief</cite>
+              </blockquote>
+              <p class="material-note">
+                На странице: «225F в этой схеме — не финальный процессор, а
+                временный жилец сокета на 12–18 месяцев». Метафора и тезис
+                дошли до читателя.
+              </p>
+              <dl class="proof">
+                <div><dt>QA</dt><dd>52/52</dd></div>
+                <div><dt>Ошибок</dt><dd>0</dd></div>
+                <div><dt>Статус</dt><dd>Live</dd></div>
+              </dl>
+              <a class="material-link mono" href="https://pekaboyare.ru/hardware/cpu/intel-core-ultra-5-225f/" target="_blank" rel="noopener noreferrer">
+                открыть материал <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            <figure class="material-shot">
+              <img src={img("igrolab-225f.png")} alt="Страница Intel Core Ultra 5 225F: заголовок «ключ-карта к LGA1851»" width="1440" height="900" loading="lazy" />
+              <figcaption class="mono">225F · страница материала</figcaption>
+            </figure>
+          </article>
+
+          <article class="material material-reverse">
+            <div class="material-copy">
+              <div class="material-kicker mono">02 / self-correction</div>
+              <h3>Ryzen 7 9800X3D</h3>
+              <p>
+                В KB стояло <code>TJmax 89 °C</code> из training data. Фактчек
+                дал 95 °C; заодно исправили N4 → N4P. Механическая замена
+                оставила бы документ с внутренним противоречием: маркер говорит
+                95, а аргумент построен на 89.
+              </p>
+              <blockquote>
+                «When qa-arc-map fact-checker corrected the number, it did not
+                cascade to dependent propositions.»
+                <cite>ADR-003</cite>
+              </blockquote>
+              <p class="material-note">
+                Поэтому появился класс <code>[factual/propagated]</code>:
+                чинится не строка, а вся зависимая логика.
+              </p>
+              <dl class="proof">
+                <div><dt>Поймано</dt><dd>89 → 95</dd></div>
+                <div><dt>Каскад</dt><dd>1</dd></div>
+                <div><dt>Урок</dt><dd>ADR-003</dd></div>
+              </dl>
+            </div>
+            <div class="material-terminal" aria-label="Фрагмент ADR-003">
+              <div class="terminal-top mono">
+                <span>ADR-003 / G6</span>
+                <span>factual/propagated</span>
+              </div>
+              <pre><code>[factual] TJmax
+location: §1.5, "89°C"
+current:  89°C
+fixed:    95°C
+source:   AMD product page
+
+[propagated] "TJmax ниже чем у non-X3D"
+depends_on: TJmax 95°C
+status:   proposition invalidated
+action:   rebuild Tradeoff + Anchor</code></pre>
+              <div class="terminal-foot mono">
+                <span>KB commit</span>
+                <span>89 → 95 · N4 → N4P</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="material">
+            <div class="material-copy">
+              <div class="material-kicker mono">03 / editorial hold</div>
+              <h3>Ryzen 9 9950X</h3>
+              <p>
+                Внутренний материал, который <strong>не был опубликован</strong>.
+                QA нашёл один факт-фейл: компиляция ядра 28 секунд против 47 у
+                Phoronix. Плюс два критических противоречия: Profile 3
+                рекомендует SFF, а IRV говорит «провал»; в таблице 170 W, в
+                тексте 148 W.
+              </p>
+              <blockquote>
+                «PASS — с условиями. Требуется фикс 2 критических противоречий
+                перед публикацией.»
+                <cite>QA Arc-Map Report</cite>
+              </blockquote>
+              <p class="material-note">
+                Это не провал пайплайна. Это его работа: лучше остановить
+                материал, чем объяснять читателю, почему два числа — одно и то
+                же.
+              </p>
+              <dl class="proof">
+                <div><dt>FAIL</dt><dd>1</dd></div>
+                <div><dt>CRITICAL</dt><dd>2</dd></div>
+                <div><dt>HIGH</dt><dd>4</dd></div>
+                <div><dt>MEDIUM</dt><dd>6</dd></div>
+              </dl>
+            </div>
+            <div class="material-verdict" aria-label="Вердикт QA по 9950X">
+              <div class="verdict-top mono">
+                <span>QA / 9950X</span>
+                <span>hold</span>
+              </div>
+              <div class="verdict-status">PASS<br />— С УСЛОВИЯМИ</div>
+              <ul class="verdict-list">
+                <li><span>Факты</span><span>18/27 OK · 1 FAIL · 5 WARN · 3 UNVERIFIED</span></li>
+                <li><span>Структура</span><span>2 CRITICAL · 4 HIGH · 6 MEDIUM</span></li>
+                <li><span>Решение</span><span>не публиковать до фикса</span></li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="material material-reverse">
+            <div class="material-copy">
+              <div class="material-kicker mono">04 / provenance</div>
+              <h3>RTX 5060 Ti 16GB</h3>
+              <p>
+                GPU-обзор, где проверка видна не во внутреннем отчёте, а на
+                странице. 16 ключевых утверждений, каждое — минимум два
+                источника: TechPowerUp, Wikipedia, Tom’s Hardware, TechSpot,
+                ComputerBase, 3DNews.
+              </p>
+              <blockquote>
+                «Спецификации верифицированы · KB pc_hardware_knowledge_base ·
+                Аудит 20.06.2026.»
+                <cite>Плашка на странице</cite>
+              </blockquote>
+              <p class="material-note">
+                Шесть WARN — не ошибки, а границы: TSMC 4N vs 4NP, округление
+                +56% vs +55.6%, БП 550 W vs 600 W. Они зафиксированы, а не
+                спрятаны.
+              </p>
+              <dl class="proof">
+                <div><dt>Claims</dt><dd>16</dd></div>
+                <div><dt>Источников</dt><dd>2+</dd></div>
+                <div><dt>WARN</dt><dd>6</dd></div>
+              </dl>
+              <a class="material-link mono" href="https://pekaboyare.ru/hardware/gpu/nvidia-geforce-rtx-5060-ti/" target="_blank" rel="noopener noreferrer">
+                открыть материал <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            <figure class="material-shot">
+              <img src={img("igrolab-5060ti.png")} alt="Страница RTX 5060 Ti 16GB с плашкой верификации спецификаций" width="1440" height="900" loading="lazy" />
+              <figcaption class="mono">RTX 5060 Ti · провенанс на странице</figcaption>
+            </figure>
+          </article>
+        </div>
+      </section>
+
+      <section class="ops-section wrap" aria-labelledby="ledger">
+        <div class="ops-section-head">
+          <div class="ops-label mono">03 / ledger</div>
+          <h2 id="ledger">Что поймали до публикации.</h2>
+          <p class="ops-section-note">
+            Не «всё проверено», а конкретный след: что искали, что нашли, что
+            сделали.
+          </p>
+        </div>
+
+        <div class="ledger">
+          <div class="ledger-row ledger-head mono">
+            <span>Материал</span>
+            <span>Что проверяли</span>
+            <span>Что нашли</span>
+            <span>Решение</span>
+          </div>
+          {ledger.map((row) => (
+            <div class={`ledger-row ledger-${row.tone}`}>
+              <span class="ledger-name">{row.material}</span>
+              <span>{row.checked}</span>
+              <span>{row.found}</span>
+              <span class="ledger-decision">{row.decision}</span>
+            </div>
+          ))}
+        </div>
+
+        <div class="numbers">
+          <div class="number">
+            <div class="number-value">99</div>
+            <div class="number-label">страниц собрано</div>
+            <div class="number-note mono">~8 секунд build</div>
+          </div>
+          <div class="number">
+            <div class="number-value">123</div>
+            <div class="number-label">карточки в KB</div>
+            <div class="number-note mono">97 с профилями</div>
+          </div>
+          <div class="number">
+            <div class="number-value">20</div>
+            <div class="number-label">narrative arcs</div>
+            <div class="number-note mono">6 briefs · 4 QA</div>
+          </div>
+          <div class="number">
+            <div class="number-value">14</div>
+            <div class="number-label">детерминированных проверок</div>
+            <div class="number-note mono">PCBO · fail closed</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ops-section ops-section-tint" aria-labelledby="range">
+        <div class="wrap">
+          <div class="ops-section-head">
+            <div class="ops-label mono">04 / range</div>
+            <h2 id="range">Не только обзоры.</h2>
+            <p class="ops-section-note">
+              Один контур — разные жанры. Формат меняется, дисциплина — нет.
+            </p>
+          </div>
+
+          <div class="range-grid">
+            {range.map((item) => (
+              <article class="range-card">
+                <figure>
+                  <img src={img(item.image)} alt={`Материал «${item.title}»`} width="1440" height="900" loading="lazy" />
+                </figure>
+                <div class="range-copy">
+                  <div class="material-kicker mono">{item.kicker}</div>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                  <a class="material-link mono" href={item.href} target="_blank" rel="noopener noreferrer">
+                    {item.link} <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="ops-section wrap" aria-labelledby="limits">
+        <div class="ops-section-head">
+          <div class="ops-label mono">05 / limits</div>
+          <h2 id="limits">Что это не доказывает.</h2>
+          <p class="ops-section-note">
+            Без этого блока кейс превращается в рекламу. С ним — в рабочий
+            разговор.
+          </p>
+        </div>
+
+        <div class="limit-grid">
+          {limits.map((limit) => (
+            <article class="limit">
+              <h3>{limit.title}</h3>
+              <p>{limit.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="case-cta">
+        <div class="wrap case-cta-inner">
+          <div>
+            <div class="mono">AI Content Ops</div>
+            <h2>Нужен человек, который построит такой контур?</h2>
+          </div>
+          <div class="case-cta-actions">
+            <a class="ops-button" href={mailto}>
+              Обсудить <span aria-hidden="true">↗</span>
+            </a>
+            <a class="ops-text-link mono" href={`${base}#projects`}>
+              вернуться к проектам
+            </a>
+          </div>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .ops-hero {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ops-hero-inner {
+    padding-block: clamp(28px, 4vw, 56px) clamp(40px, 6vw, 76px);
+  }
+
+  .ops-back {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: clamp(40px, 6vw, 72px);
+    color: var(--muted);
+    transition: color 160ms var(--ease);
+  }
+
+  .ops-back:hover {
+    color: var(--signal-text);
+  }
+
+  .ops-kicker {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--faint);
+  }
+
+  .ops-title {
+    max-width: 28ch;
+    margin-top: clamp(26px, 4vw, 44px);
+    font-family: var(--serif);
+    font-size: clamp(40px, 6vw, 84px);
+    font-weight: 500;
+    line-height: 0.94;
+    letter-spacing: -0.05em;
+  }
+
+  .ops-lede {
+    max-width: 58ch;
+    margin-top: clamp(26px, 3.5vw, 40px);
+    color: var(--ink-2);
+    font-size: clamp(17px, 1.7vw, 21px);
+    line-height: 1.45;
+  }
+
+  .ops-meta {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: clamp(40px, 5vw, 64px);
+    border-top: 1px solid var(--line);
+  }
+
+  .ops-meta div {
+    padding: 14px 18px 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .ops-meta div:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .ops-meta dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .ops-meta dd {
+    margin-top: 6px;
+    color: var(--ink-2);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .ops-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 28px;
+    margin-top: 30px;
+  }
+
+  .ops-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    transition: background 180ms var(--ease), color 180ms var(--ease);
+  }
+
+  .ops-button:hover {
+    background: var(--signal-text);
+    color: var(--paper);
+  }
+
+  .ops-text-link {
+    color: var(--muted);
+    transition: color 160ms var(--ease);
+  }
+
+  .ops-text-link:hover {
+    color: var(--signal-text);
+  }
+
+  .ops-hero-shot {
+    padding-block: clamp(36px, 5vw, 64px);
+    background: var(--tint-signal);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hero-figure {
+    display: grid;
+    gap: 14px;
+  }
+
+  .hero-figure img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+
+  .hero-figure figcaption {
+    color: var(--muted);
+  }
+
+  .ops-section {
+    padding-block: clamp(64px, 9vw, 124px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ops-section-tint {
+    background: var(--paper-2);
+  }
+
+  .ops-section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 20px 48px;
+    margin-bottom: clamp(36px, 5vw, 64px);
+  }
+
+  .ops-label {
+    grid-column: 1 / -1;
+    padding-bottom: 12px;
+    border-bottom: 1px solid currentColor;
+    color: var(--faint);
+  }
+
+  .ops-section-head h2 {
+    max-width: 24ch;
+    font-family: var(--serif);
+    font-size: clamp(34px, 6.4vw, 68px);
+    font-weight: 500;
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+  }
+
+  .ops-section-note {
+    max-width: 34ch;
+    color: var(--muted);
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
+  .flow-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .flow-step {
+    padding: 18px 22px 28px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .flow-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+
+  .flow-num {
+    color: var(--signal-text);
+  }
+
+  .flow-step h3 {
+    font-family: var(--serif);
+    font-size: clamp(23px, 2.4vw, 30px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .flow-step p {
+    margin-top: 10px;
+    max-width: 34ch;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .material {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(30px, 5vw, 72px);
+    align-items: center;
+    padding-block: clamp(40px, 6vw, 72px);
+    border-top: 1px solid var(--line);
+  }
+
+  .material:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .material-reverse .material-copy {
+    order: 2;
+  }
+
+  .material-reverse .material-shot,
+  .material-reverse .material-terminal,
+  .material-reverse .material-verdict {
+    order: 1;
+  }
+
+  .material-kicker {
+    color: var(--signal-text);
+  }
+
+  .material-copy h3 {
+    margin-top: 16px;
+    font-family: var(--serif);
+    font-size: clamp(34px, 4.2vw, 54px);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+  }
+
+  .material-copy p {
+    max-width: 52ch;
+    margin-top: 16px;
+    color: var(--ink-2);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .material-copy code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    padding: 1px 4px;
+    background: var(--paper-3);
+  }
+
+  .material-copy blockquote {
+    max-width: 52ch;
+    margin-top: 22px;
+    padding-left: 16px;
+    border-left: 2px solid var(--signal);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.4;
+  }
+
+  .material-copy blockquote cite {
+    display: block;
+    margin-top: 8px;
+    color: var(--faint);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-style: normal;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .material-note {
+    color: var(--muted) !important;
+    font-size: 15px !important;
+  }
+
+  .proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 28px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  .proof dt {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .proof dd {
+    margin-top: 2px;
+    font-family: var(--serif);
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .material-link {
+    display: inline-block;
+    margin-top: 22px;
+    color: var(--signal-text);
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 2px;
+  }
+
+  .material-link:hover {
+    color: var(--ink);
+  }
+
+  .material-shot {
+    display: grid;
+    gap: 10px;
+  }
+
+  .material-shot img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+  }
+
+  .material-shot figcaption {
+    color: var(--faint);
+  }
+
+  .material-terminal,
+  .material-verdict {
+    border: 1px solid var(--ink);
+    background: #0d0f11;
+    color: #e8e4da;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.65;
+    box-shadow: 10px 10px 0 var(--tint-signal);
+  }
+
+  .terminal-top,
+  .terminal-foot,
+  .verdict-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #2a2d31;
+    color: #8f9299;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .terminal-foot {
+    border-top: 1px solid #2a2d31;
+    border-bottom: 0;
+    color: #d9a441;
+  }
+
+  .material-terminal pre {
+    margin: 0;
+    padding: 22px 18px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    color: #d9d5cb;
+  }
+
+  .material-terminal code {
+    font-family: inherit;
+  }
+
+  .verdict-top {
+    color: #8f9299;
+  }
+
+  .verdict-status {
+    padding: 24px 18px 18px;
+    color: #f0c040;
+    font-family: var(--serif);
+    font-size: clamp(30px, 3.6vw, 44px);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .verdict-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid #2a2d31;
+  }
+
+  .verdict-list li {
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #23262a;
+    color: #c9c4b8;
+    font-size: 11px;
+  }
+
+  .verdict-list li span:first-child {
+    color: #8f9299;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .ledger {
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .ledger-row {
+    display: grid;
+    grid-template-columns: 1.1fr 1.4fr 1.5fr 0.7fr;
+    gap: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ledger-row > span {
+    padding: 14px 16px;
+    border-right: 1px solid var(--line);
+    font-size: 14.5px;
+    line-height: 1.4;
+  }
+
+  .ledger-head > span {
+    color: var(--faint);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .ledger-name {
+    font-weight: 560;
+  }
+
+  .ledger-decision {
+    font-family: var(--mono);
+    font-size: 10px !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .ledger-ok .ledger-decision {
+    color: var(--green);
+  }
+
+  .ledger-warn .ledger-decision {
+    color: var(--signal-text);
+  }
+
+  .ledger-stop {
+    background: var(--paper-3);
+  }
+
+  .ledger-stop .ledger-decision {
+    color: var(--signal-text);
+    font-weight: 600;
+  }
+
+  .numbers {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: clamp(40px, 5vw, 64px);
+    border-top: 1px solid var(--line);
+  }
+
+  .number {
+    padding: 16px 20px 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .number:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .number-value {
+    font-family: var(--serif);
+    font-size: clamp(38px, 4.4vw, 58px);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+
+  .number-label {
+    margin-top: 8px;
+    color: var(--ink-2);
+    font-size: 14px;
+  }
+
+  .number-note {
+    margin-top: 4px;
+    color: var(--faint);
+  }
+
+  .range-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 36px);
+  }
+
+  .range-card {
+    display: grid;
+    gap: 20px;
+    padding: 0 0 24px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .range-card figure {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .range-card img {
+    width: 100%;
+    height: auto;
+  }
+
+  .range-copy {
+    padding: 0 24px;
+  }
+
+  .range-copy h3 {
+    margin-top: 12px;
+    font-family: var(--serif);
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  .range-copy p {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .limit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .limit {
+    padding: clamp(22px, 3vw, 34px);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .limit h3 {
+    font-family: var(--serif);
+    font-size: clamp(23px, 2.4vw, 30px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .limit p {
+    max-width: 44ch;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
+  .case-cta {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .case-cta-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) auto;
+    gap: 32px 64px;
+    align-items: end;
+    padding-block: clamp(56px, 8vw, 100px);
+  }
+
+  .case-cta .mono {
+    color: oklch(0.64 0.01 82);
+  }
+
+  .case-cta h2 {
+    max-width: 26ch;
+    margin-top: 18px;
+    font-family: var(--serif);
+    font-size: clamp(34px, 4.6vw, 58px);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+  }
+
+  .case-cta-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .case-cta .ops-button {
+    background: var(--signal-text);
+  }
+
+  .case-cta .ops-button:hover {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .case-cta .ops-text-link {
+    color: oklch(0.76 0.01 86);
+  }
+
+  @media (max-width: 980px) {
+    .ops-meta {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ops-meta div:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .ops-meta div:nth-child(n + 3) {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .material {
+      grid-template-columns: 1fr;
+    }
+
+    .material-reverse .material-copy,
+    .material-reverse .material-shot,
+    .material-reverse .material-terminal,
+    .material-reverse .material-verdict {
+      order: initial;
+    }
+
+    .flow-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ledger-row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .ledger-head {
+      display: none;
+    }
+
+    .ledger-row > span {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .numbers {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .number:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .number:nth-child(n + 3) {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .range-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .ops-section-head {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .ops-title {
+      font-size: clamp(40px, 11vw, 60px);
+    }
+
+    .ops-meta {
+      grid-template-columns: 1fr;
+    }
+
+    .ops-meta div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 11px 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .ops-meta div:first-child {
+      border-top: 0;
+    }
+
+    .ops-meta div:nth-child(n + 3) {
+      margin-top: 0;
+      padding-top: 11px;
+    }
+
+    .ops-meta dd {
+      margin: 0;
+      text-align: right;
+    }
+
+    .flow-list {
+      grid-template-columns: 1fr;
+    }
+
+    .limit-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .case-cta-inner {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .ledger-row {
+      grid-template-columns: 1fr;
+    }
+
+    .ledger-row > span {
+      padding: 10px 12px;
+    }
+
+    .numbers {
+      grid-template-columns: 1fr;
+    }
+
+    .number {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 0;
+      padding: 12px 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .number:first-child {
+      border-top: 0;
+    }
+
+    .number:nth-child(n + 3) {
+      margin-top: 0;
+      padding-top: 12px;
+    }
+
+    .number-label,
+    .number-note {
+      margin: 0;
+      text-align: right;
+    }
+
+    .number-value {
+      font-size: 34px;
+    }
+  }
+</style>
