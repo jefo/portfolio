@@ -9,7 +9,7 @@ status: "Live · 99 страниц"
 stack: ["Astro 6", "Svelte 5", "Python", "YAML", "LLM"]
 tests: "20 arc maps · 4 QA-отчёта"
 caseUrl: "/cases/igrolab"
-cover: "shots/igrolab-issue.png"
+cover: "shots/igrolab-issue.webp"
 coverType: wide
 accent: signal
 featured: false
