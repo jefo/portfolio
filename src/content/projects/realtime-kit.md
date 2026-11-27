@@ -9,6 +9,7 @@ status: "0.1.0 · репозиторий публичный"
 stack: ["TypeScript", "Bun", "Svelte 5", "SSE", "WebSocket", "UDF"]
 tests: "157 тестов"
 repo: "https://github.com/jefo/realtime-kit"
+caseUrl: "/cases/realtime-kit/"
 cover: "shots/realtime-kit-terminal.png"
 coverType: wide
 accent: green

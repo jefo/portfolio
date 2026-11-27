@@ -1,0 +1,1147 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { site } from "../../data/site";
+
+const base = import.meta.env.BASE_URL;
+const img = (name: string) => `${base}shots/${name}`;
+const repo = "https://github.com/jefo/realtime-kit";
+const mailto = `mailto:${site.email}?subject=${encodeURIComponent("Realtime Kit: похожий поток")}`;
+
+const firsts = [
+  {
+    kicker: "01 / границы",
+    title: "Микросервисы в четырёх пакетах",
+    text: "Четыре пакета с собственными контрактами: ingest, SSE-шлюз, UDF-сервер и UI. Каждый можно поднять отдельным процессом и каждый можно использовать без остальных. Это не микросервисы ради моды, а способ не тащить биржу в интерфейс, а интерфейс в биржу.",
+  },
+  {
+    kicker: "02 / механизм",
+    title: "Слово нашлось позже",
+    text: "Механизм я придумал раньше, чем узнал термин «мультиплексирование». Один upstream на ключ, счётчик подписчиков, fan-out в сессии. Название потом просто объяснило то, что уже работало.",
+  },
+  {
+    kicker: "03 / контракт",
+    title: "Новая биржа — новый адаптер",
+    text: "Интегратору не нужно трогать шлюз, UDF и UI. Он реализует ExchangeConnector — и получает ingest, кэш и SSE. Биржа перестаёт быть частью архитектуры и становится деталью.",
+  },
+];
+
+const invariants = [
+  "Один upstream на ключ — независимо от числа подписчиков.",
+  "Переходы lifecycle сериализованы: два подписчика не запускают поток дважды.",
+  "Медленный клиент теряет старые события, а не память.",
+  "Провайдер, который не ответил, получает 504, а не висит.",
+  "CORS выключен по умолчанию, тело запроса ограничено.",
+  "ID сессии — bearer-возможность, а не просто идентификатор.",
+];
+
+const numbers = [
+  { value: "4", label: "пакета", note: "независимые" },
+  { value: "157", label: "тестов", note: "143 core + 14 UI" },
+  { value: "0", label: "runtime-зависимостей", note: "между пакетами" },
+  { value: "MIT", label: "лицензия", note: "код открыт" },
+];
+
+const checks = [
+  "bun test — 143 passed, 0 failed; bun run test:ui — 14 компонентных тестов.",
+  "CI гоняет тесты, typecheck, сборку пакетов и установку в чистый проект.",
+  "Живой путь: Binance WS → нормализация → SSE → браузер.",
+  "UDF-демо на своих данных без вендорской библиотеки.",
+  "Svelte-терминал: таблица, стакан, спарклайн, две темы.",
+  "Пакеты ставятся из исходников; npm-публикация — следующий шаг.",
+];
+
+const limits = [
+  {
+    title: "Не на npm",
+    text: "Пакеты ставятся из исходников. Имя и scope ещё не финализированы — это честный 0.1, а не готовый дистрибутив.",
+  },
+  {
+    title: "Только Binance",
+    text: "Контракт готов к другим биржам, но в поставке один коннектор. Это ограничение, а не обещание.",
+  },
+  {
+    title: "SSE без replay",
+    text: "Доставка at-most-once. Нет буфера и Last-Event-ID: пропущенное событие не догоняется.",
+  },
+  {
+    title: "Без auth и биллинга",
+    text: "ID сессии — bearer-возможность. Шлюз нужно ставить за аутентификацию и прокси.",
+  },
+  {
+    title: "Таблица без виртуализации",
+    text: "Сотни строк — да. Десятки тысяч — нужен controlled/manual mode.",
+  },
+  {
+    title: "0.x",
+    text: "API может меняться. SSR пока не покрыт тестами, свечного компонента нет — только Sparkline.",
+  },
+];
+---
+
+<BaseLayout
+  title="Realtime Kit — кейс: поток, который держится сам"
+  description="Разбор Realtime Kit: мультиплексирование SSE, ingest биржи, UDF-контракт и четыре пакета, которые раскладываются в сервисы. 157 тестов."
+>
+  <Header />
+
+  <main id="main">
+    <article class="case">
+      <header class="case-hero">
+        <div class="wrap case-hero-inner">
+          <a class="case-back mono" href={`${base}#projects`}>
+            <span aria-hidden="true">←</span> все проекты
+          </a>
+
+          <div class="case-kicker mono">
+            <span>Кейс / Realtime</span>
+            <span>2026</span>
+          </div>
+
+          <h1 class="case-title">
+            Чужое API —<br />
+            это просто.
+          </h1>
+
+          <p class="case-lede">
+            Realtime Kit — четыре open-source пакета для real-time терминалов.
+            Первый проект, где я собирал не бота, а распределённую систему:
+            подписки, реконнекты, backpressure и границы, которые можно
+            разложить по сервисам. Самым простым в нём оказалось чужое API.
+          </p>
+
+          <dl class="case-meta">
+            <div>
+              <dt>Роль</dt>
+              <dd>Архитектура, backend, OSS-упаковка, Svelte-демо</dd>
+            </div>
+            <div>
+              <dt>Стек</dt>
+              <dd>TypeScript · Bun · SSE · WebSocket · Svelte 5</dd>
+            </div>
+            <div>
+              <dt>Статус</dt>
+              <dd>0.1 alpha · MIT · не на npm</dd>
+            </div>
+            <div>
+              <dt>Проверяемо</dt>
+              <dd>143 + 14 тестов</dd>
+            </div>
+          </dl>
+
+          <div class="case-actions">
+            <a class="case-button" href={repo} target="_blank" rel="noopener noreferrer">
+              Смотреть код <span aria-hidden="true">↗</span>
+            </a>
+            <a class="case-text-link mono" href={mailto}>
+              обсудить похожий поток <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <div class="case-hero-shot">
+        <div class="wrap">
+          <figure class="hero-figure">
+            <img
+              src={img("realtime-kit-terminal.png")}
+              alt="Тёмный терминал Realtime Kit: метрики BTC/USDT, спарклайн, стакан и таблица рынков"
+              width="1440"
+              height="800"
+              loading="eager"
+              decoding="async"
+            />
+            <figcaption class="mono">
+              Демо-терминал: таблица, стакан, спарклайн и статус соединения
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <section class="case-section wrap" aria-labelledby="task">
+        <div class="case-section-head">
+          <p class="mono case-label">01 / задача</p>
+          <h2 id="task">Терминал начинается с графика. Ломается — на потоке.</h2>
+        </div>
+
+        <div class="task-grid">
+          <blockquote class="task-quote">
+            «Четыре виджета просят один и тот же поток. Дальше начинается
+            транспорт».
+          </blockquote>
+
+          <div class="task-copy">
+            <p>
+              Один виджет просит стакан, второй — свечи, третий — funding.
+              Каждый открывает свой WebSocket, каждый переподключается сам,
+              каждый продолжает тянуть данные, даже когда вкладка свёрнута.
+            </p>
+            <p>
+              Через месяц это десятки соединений, дубли подписок и память,
+              которая растёт вместе с числом символов. UI подтормаживает не
+              из-за графики, а из-за транспорта.
+            </p>
+            <p>
+              Задача была не нарисовать график, а сделать так, чтобы поток
+              пережил рост числа виджетов, клиентов и бирж. Не «сейчас
+              работает», а «работает, когда станет больше».
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section case-section-tint" aria-labelledby="firsts">
+        <div class="wrap">
+          <div class="case-section-head">
+            <p class="mono case-label">02 / впервые</p>
+            <h2 id="firsts">Три вещи, которые я делал впервые.</h2>
+          </div>
+
+          <div class="first-grid">
+            {firsts.map((first) => (
+              <article class="first">
+                <p class="mono first-kicker">{first.kicker}</p>
+                <h3>{first.title}</h3>
+                <p>{first.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section case-section-ink" aria-labelledby="architecture">
+        <div class="wrap">
+          <div class="case-section-head">
+            <p class="mono case-label">03 / архитектура</p>
+            <h2 id="architecture">Четыре границы, один путь данных.</h2>
+          </div>
+
+          <p class="arch-lede">
+            Пакеты не зависят друг от друга в runtime. Ingest не знает про HTTP,
+            шлюз — про биржи, UDF — про сокеты, UI — про транспорт. Поэтому
+            каждую границу можно проверить и заменить отдельно.
+          </p>
+
+          <div class="arch-diagram" aria-label="Слои Realtime Kit">
+            <div class="arch-row">
+              <p class="arch-label mono">exchange</p>
+              <div class="arch-items">
+                <span>Binance WS</span>
+              </div>
+            </div>
+            <div class="arch-row">
+              <p class="arch-label mono">ingest</p>
+              <div class="arch-items">
+                <span>ExchangeConnector</span>
+                <span>MarketHub</span>
+                <span>cache</span>
+              </div>
+            </div>
+            <div class="arch-row arch-row-domain">
+              <p class="arch-label mono">transport</p>
+              <div class="arch-items">
+                <span>SSE gateway</span>
+                <span>subscriptions</span>
+                <span>bounded queues</span>
+              </div>
+            </div>
+            <div class="arch-row">
+              <p class="arch-label mono">charts</p>
+              <div class="arch-items">
+                <span>UDF handler</span>
+                <span>DataProvider</span>
+              </div>
+            </div>
+            <div class="arch-row">
+              <p class="arch-label mono">ui</p>
+              <div class="arch-items">
+                <span>DataTable</span>
+                <span>OrderBook</span>
+                <span>Sparkline</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-notes">
+            <div>
+              <h3>Один upstream на ключ</h3>
+              <p>
+                <code>MarketHub</code> считает ссылки: первый подписчик
+                запускает поток биржи, последний — останавливает. Два виджета на
+                BTC дают одну подписку на бирже.
+              </p>
+            </div>
+            <div>
+              <h3>Одна сессия на клиента</h3>
+              <p>
+                Клиент присылает набор подписок один раз и слушает один
+                SSE-поток. Ключи детерминированы, очередь ограничена, медленный
+                клиент не растёт в памяти.
+              </p>
+            </div>
+            <div>
+              <h3>Биржа — это адаптер</h3>
+              <p>
+                <code>ExchangeConnector</code> и <code>DataProvider</code> —
+                единственные точки интеграции. Новая биржа или источник свечей
+                не меняет транспорт и UI.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section wrap" aria-labelledby="hard">
+        <div class="case-section-head">
+          <p class="mono case-label">04 / сложность</p>
+          <h2 id="hard">Ничего не ломалось.</h2>
+        </div>
+
+        <div class="task-grid">
+          <blockquote class="task-quote">
+            «В этом проекте не было аварии, которую я героически чинил. Была
+            система, которую впервые нужно было удержать в голове целиком».
+          </blockquote>
+
+          <div class="task-copy">
+            <p>
+              Чужое API оказалось простым: Binance WS разбирается за вечер.
+              Сложным было другое — кто владеет сокетом, когда его
+              останавливать, что делать с медленным клиентом и как добавить
+              биржу, не трогая остальное.
+            </p>
+            <p>
+              «Отказоустойчивая масштабируемая распределённая система» — не три
+              прилагательных для резюме. Это набор решений, которые нужно
+              принять до первого пользователя, потому что потом у них будет
+              цена.
+            </p>
+          </div>
+        </div>
+
+        <p class="mono invariants-label">Инварианты, которые держались одновременно</p>
+        <ul class="check-list">
+          {invariants.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+
+      <section class="case-section case-section-tint" aria-labelledby="screens">
+        <div class="wrap">
+          <div class="case-section-head">
+            <p class="mono case-label">05 / экраны</p>
+            <h2 id="screens">Терминал, стакан и свой источник свечей.</h2>
+          </div>
+
+          <div class="screen-mosaic">
+            <figure class="screen">
+              <img
+                src={img("realtime-kit-orderbook.webp")}
+                alt="Стакан BTC/USDT в терминале Realtime Kit: цены, объёмы и depth-бары"
+                width="360"
+                height="550"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>
+                <span class="mono">01</span>
+                Стакан: агрегация по тику, depth-бары и spread.
+              </figcaption>
+            </figure>
+
+            <div class="screen-stack">
+              <figure class="screen">
+                <img
+                  src={img("realtime-kit.png")}
+                  alt="График свечей BTCUSDT на демо-данных: 168 баров через UDF-эндпоинт Realtime Kit"
+                  width="1440"
+                  height="900"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption>
+                  <span class="mono">02</span>
+                  UDF-эндпоинт на своих данных: 168 баров, без
+                  TradingView-библиотеки.
+                </figcaption>
+              </figure>
+
+              <figure class="screen">
+                <img
+                  src={img("realtime-kit-markets.webp")}
+                  alt="Таблица рынков в терминале Realtime Kit: BTC, ETH, SOL, ARB, DOGE, LINK, AVAX, TON с ценами и funding"
+                  width="850"
+                  height="310"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption>
+                  <span class="mono">03</span>
+                  Таблица: сортировка, nulls last и управляемый режим для
+                  серверных данных.
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section wrap" aria-labelledby="facts">
+        <div class="case-section-head">
+          <p class="mono case-label">06 / что проверяемо</p>
+          <h2 id="facts">Цифры из репозитория, не из презентации.</h2>
+        </div>
+
+        <div class="numbers">
+          {numbers.map((number) => (
+            <div class="number">
+              <p class="number-value">{number.value}</p>
+              <p class="number-label">{number.label}</p>
+              <p class="number-note mono">{number.note}</p>
+            </div>
+          ))}
+        </div>
+
+        <ul class="check-list">
+          {checks.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+
+      <section class="case-section case-section-tint" aria-labelledby="limits">
+        <div class="wrap">
+          <div class="case-section-head">
+            <p class="mono case-label">07 / границы</p>
+            <h2 id="limits">Что этот кейс не обещает.</h2>
+          </div>
+
+          <div class="limit-grid">
+            {limits.map((limit) => (
+              <article class="limit">
+                <h3>{limit.title}</h3>
+                <p>{limit.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="case-section wrap" aria-labelledby="again">
+        <div class="case-section-head">
+          <p class="mono case-label">08 / вывод</p>
+          <h2 id="again">Что бы я сделал иначе.</h2>
+        </div>
+
+        <div class="retro-grid">
+          <p class="retro-quote">Запустил бы раньше.</p>
+          <div class="task-copy">
+            <p>
+              Часть архитектуры была заготовкой под масштаб, которого у продукта
+              ещё не было. Я строил распределённую систему до того, как появился
+              первый реальный поток пользователей.
+            </p>
+            <p>
+              Более простой бэкенд дал бы быстрее первый цикл: проверить спрос,
+              увидеть, где действительно болит, и только потом платить
+              сложностью. Распределённость оправдана нагрузкой, а не ожиданием
+              нагрузки.
+            </p>
+            <p>
+              Это не отменяет проект. Это главный вывод, который я забрал в
+              следующие.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="case-cta">
+        <div class="wrap case-cta-inner">
+          <div>
+            <p class="mono case-label">Дальше</p>
+            <h2>Нужен поток, который переживёт рост?</h2>
+          </div>
+          <div class="case-cta-actions">
+            <a class="case-button case-button-light" href={mailto}>
+              Написать <span aria-hidden="true">↗</span>
+            </a>
+            <a class="case-text-link mono" href={repo} target="_blank" rel="noopener noreferrer">
+              открыть репозиторий <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .case {
+    --case-gutter: clamp(20px, 4vw, 56px);
+  }
+
+  .case-hero {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .case-hero-inner {
+    padding-block: clamp(28px, 4vw, 56px) clamp(40px, 6vw, 76px);
+  }
+
+  .case-back {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: clamp(40px, 6vw, 72px);
+    color: var(--muted);
+    transition: color 160ms var(--ease);
+  }
+
+  .case-back:hover {
+    color: var(--signal-text);
+  }
+
+  .case-kicker {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--faint);
+  }
+
+  .case-title {
+    max-width: 15ch;
+    margin-top: clamp(26px, 4vw, 44px);
+    font-family: var(--serif);
+    font-size: clamp(48px, 8.2vw, 112px);
+    font-weight: 500;
+    line-height: 0.92;
+    letter-spacing: -0.05em;
+  }
+
+  .case-lede {
+    max-width: 58ch;
+    margin-top: clamp(26px, 3.5vw, 40px);
+    color: var(--ink-2);
+    font-size: clamp(17px, 1.7vw, 21px);
+    line-height: 1.45;
+  }
+
+  .case-meta {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: clamp(40px, 5vw, 64px);
+    border-top: 1px solid var(--line);
+  }
+
+  .case-meta div {
+    padding: 14px 18px 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .case-meta div:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .case-meta dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .case-meta dd {
+    margin-top: 6px;
+    color: var(--ink-2);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .case-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 28px;
+    margin-top: 30px;
+  }
+
+  .case-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    transition: background 180ms var(--ease), color 180ms var(--ease);
+  }
+
+  .case-button:hover {
+    background: var(--signal-text);
+    color: var(--paper);
+  }
+
+  .case-text-link {
+    color: var(--muted);
+    transition: color 160ms var(--ease);
+  }
+
+  .case-text-link:hover {
+    color: var(--signal-text);
+  }
+
+  .case-hero-shot {
+    padding-block: clamp(36px, 5vw, 64px);
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hero-figure {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+  }
+
+  .hero-figure img {
+    width: auto;
+    max-width: 100%;
+    max-height: min(72vh, 760px);
+    border: 1px solid var(--ink);
+    background: var(--ink);
+  }
+
+  .hero-figure figcaption {
+    color: var(--muted);
+  }
+
+  .case-section {
+    padding-block: clamp(64px, 9vw, 124px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .case-section-tint {
+    background: var(--paper-2);
+  }
+
+  .case-section-ink {
+    background: var(--ink);
+    color: var(--paper);
+    border-bottom: 0;
+  }
+
+  .case-section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 20px 48px;
+    margin-bottom: clamp(36px, 5vw, 64px);
+  }
+
+  .case-label {
+    grid-column: 1 / -1;
+    padding-bottom: 12px;
+    border-bottom: 1px solid currentColor;
+    color: var(--faint);
+  }
+
+  .case-section-ink .case-label {
+    color: oklch(0.64 0.01 82);
+    border-color: oklch(0.33 0.012 75);
+  }
+
+  .case-section-head h2 {
+    max-width: 24ch;
+    font-family: var(--serif);
+    font-size: clamp(34px, 6.4vw, 68px);
+    font-weight: 500;
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+  }
+
+  .task-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: clamp(36px, 6vw, 90px);
+    align-items: start;
+  }
+
+  .task-quote {
+    max-width: 24ch;
+    font-family: var(--serif);
+    font-size: clamp(28px, 3.4vw, 44px);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+  }
+
+  .task-copy {
+    display: grid;
+    gap: 16px;
+    max-width: 54ch;
+    color: var(--muted);
+    font-size: 16.5px;
+    line-height: 1.55;
+  }
+
+  .task-copy code,
+  .arch-notes code,
+  .check-list code {
+    font-family: var(--mono);
+    font-size: 0.9em;
+    color: var(--ink-2);
+  }
+
+  .first-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .first {
+    padding: clamp(22px, 3vw, 34px);
+    background: var(--paper);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .first-kicker {
+    color: var(--signal-text);
+  }
+
+  .first h3 {
+    margin-top: 28px;
+    font-family: var(--serif);
+    font-size: clamp(24px, 2.5vw, 32px);
+    font-weight: 500;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+  }
+
+  .first p:last-child {
+    margin-top: 10px;
+    max-width: 40ch;
+    color: var(--muted);
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
+  .arch-lede {
+    max-width: 60ch;
+    margin-bottom: clamp(32px, 4vw, 52px);
+    color: oklch(0.8 0.01 86);
+    font-size: 17px;
+    line-height: 1.55;
+  }
+
+  .arch-diagram {
+    border-top: 1px solid oklch(0.33 0.012 75);
+  }
+
+  .arch-row {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 24px;
+    align-items: baseline;
+    padding: 18px 0;
+    border-bottom: 1px solid oklch(0.33 0.012 75);
+  }
+
+  .arch-label {
+    color: oklch(0.64 0.01 82);
+  }
+
+  .arch-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+
+  .arch-items span {
+    padding: 5px 9px;
+    border: 1px solid oklch(0.38 0.012 75);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: oklch(0.86 0.008 86);
+  }
+
+  .arch-row-domain .arch-items span {
+    border-color: var(--signal);
+    color: oklch(0.82 0.12 40);
+  }
+
+  .arch-notes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 40px;
+    margin-top: clamp(36px, 5vw, 56px);
+  }
+
+  .arch-notes h3 {
+    font-family: var(--serif);
+    font-size: 23px;
+    font-weight: 500;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+  }
+
+  .arch-notes p {
+    margin-top: 10px;
+    color: oklch(0.76 0.01 86);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .arch-notes code {
+    color: oklch(0.88 0.008 86);
+  }
+
+  .invariants-label {
+    margin-top: clamp(40px, 5vw, 64px);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    color: var(--faint);
+  }
+
+  .invariants-label + .check-list {
+    margin-top: 0;
+  }
+
+  .screen-mosaic {
+    display: grid;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+    gap: clamp(16px, 2.4vw, 32px);
+    align-items: start;
+  }
+
+  .screen-stack {
+    display: grid;
+    gap: clamp(16px, 2.4vw, 32px);
+  }
+
+  .screen {
+    display: grid;
+    gap: 12px;
+  }
+
+  .screen img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line-strong);
+    background: var(--paper-2);
+    filter: grayscale(1) contrast(1.02);
+    transition: filter 400ms var(--ease);
+  }
+
+  .screen:hover img {
+    filter: none;
+  }
+
+  .screen figcaption {
+    display: grid;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.4;
+  }
+
+  .screen figcaption .mono {
+    color: var(--signal-text);
+  }
+
+  .numbers {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+  }
+
+  .number {
+    padding: 16px 20px 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .number:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .number-value {
+    font-family: var(--serif);
+    font-size: clamp(38px, 4.4vw, 58px);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+
+  .number-label {
+    margin-top: 8px;
+    color: var(--ink-2);
+    font-size: 14px;
+  }
+
+  .number-note {
+    margin-top: 4px;
+    color: var(--faint);
+  }
+
+  .check-list {
+    display: grid;
+    gap: 0;
+    margin: clamp(34px, 4vw, 52px) 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .check-list li {
+    position: relative;
+    padding: 13px 0 13px 26px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
+  .check-list li::before {
+    content: "";
+    position: absolute;
+    top: 21px;
+    left: 2px;
+    width: 7px;
+    height: 7px;
+    background: var(--signal);
+  }
+
+  .limit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+
+  .limit {
+    padding: clamp(22px, 3vw, 34px);
+    background: var(--paper);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .limit h3 {
+    font-family: var(--serif);
+    font-size: clamp(23px, 2.4vw, 30px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .limit p {
+    max-width: 44ch;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
+  .retro-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(30px, 6vw, 90px);
+    align-items: start;
+  }
+
+  .retro-quote {
+    max-width: 12ch;
+    font-family: var(--serif);
+    font-size: clamp(42px, 7vw, 84px);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.05em;
+  }
+
+  .case-cta {
+    background: var(--paper-2);
+    border-top: 1px solid var(--line);
+  }
+
+  .case-cta-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) auto;
+    gap: 32px 64px;
+    align-items: end;
+    padding-block: clamp(56px, 8vw, 100px);
+  }
+
+  .case-cta h2 {
+    max-width: 26ch;
+    margin-top: 18px;
+    font-family: var(--serif);
+    font-size: clamp(34px, 4.6vw, 58px);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+  }
+
+  .case-cta-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .case-button-light {
+    background: var(--signal-text);
+  }
+
+  .case-button-light:hover {
+    background: var(--ink);
+  }
+
+  @media (max-width: 980px) {
+    .case-meta {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .case-meta div:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .case-meta div:nth-child(n + 3) {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .task-grid,
+    .retro-grid {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    .first-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .arch-notes {
+      grid-template-columns: 1fr;
+      gap: 22px;
+    }
+
+    .screen-mosaic {
+      grid-template-columns: 1fr;
+    }
+
+    .numbers {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .number:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .number:nth-child(n + 3) {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 720px) {
+    .case-section-head {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .case-title {
+      font-size: clamp(44px, 12vw, 64px);
+    }
+
+    .case-meta {
+      grid-template-columns: 1fr;
+    }
+
+    .case-meta div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 11px 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .case-meta div:first-child {
+      border-top: 0;
+    }
+
+    .case-meta div:nth-child(n + 3) {
+      margin-top: 0;
+      padding-top: 11px;
+    }
+
+    .case-meta dd {
+      margin: 0;
+      text-align: right;
+    }
+
+    .feature-grid,
+    .limit-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .arch-row {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .case-cta-inner {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+  }
+
+  @media (max-width: 440px) {
+    .numbers {
+      grid-template-columns: 1fr;
+    }
+
+    .number {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 0;
+      padding: 12px 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .number:first-child {
+      border-top: 0;
+    }
+
+    .number:nth-child(n + 3) {
+      margin-top: 0;
+      padding-top: 12px;
+    }
+
+    .number-label,
+    .number-note {
+      margin: 0;
+      text-align: right;
+    }
+
+    .number-value {
+      font-size: 34px;
+    }
+  }
+</style>
